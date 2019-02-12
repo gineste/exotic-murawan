@@ -40,7 +40,7 @@
 #define ITSDK_PLATFORM 				__PLATFORM_STM32L0						// Hardware platform selection
 #define ITSDK_DEVICE				__DEVICE_STM32L072XX					// Specific device
 #define ITSDK_RAM_SIZE				(20*1024)								// RAM Memory size
-#define ITSDK_WITH_UART				( __UART_USART2 | __UART_LPUART1 )		// Use LPUART1 and USART2 for debug
+#define ITSDK_WITH_UART				( __UART_LPUART1 )						// Use LPUART1 and USART2 for debug
 #define ITSDK_WITH_RTC				__RTC_ENABLED							// The Rtc is usd in the firmware
 #define ITSDK_WITH_CLK_ADJUST		__ENABLE								// The RTC (and wtachdog) is calibrated
 #define ITSDK_RTC_CLKFREQ			32768									// RTC clock source frequency
@@ -65,7 +65,8 @@
 #define ITSDK_WDG_CLKFREQ			37000									// Watchdog clock source frequency
 #define ITSDK_CORE_CLKFREQ			32000000								// Core Frequency of the chip
 
-#define ITSDK_LOGGER_CONF			0x0070									// error->info level on serial1 => USART2 (see logger.c)
+#define ITSDK_LOGGER_CONF			0x0700									// error->info level on serial1 => USART2 (see logger.c)
+																			// File | SErial 1 | Serial 2 | Debug ## Debug - Info - Warning - Error
 #define ITSDK_LOGGER_MODULE			( \
 									  __LOG_MOD_NONE		  \
 									| __LOG_MOD_STKLORA       \
@@ -77,7 +78,7 @@
 #define ITSDK_LOWPOWER_MOD			( __LOWPWR_MODE_STOP       \
 									| __LOWPWR_MODE_WAKE_RTC   \
 									| __LOWPWR_MODE_WAKE_GPIO  \
-								/*	| __LOWPWR_MODE_WAKE_LPUART1 */\
+									| __LOWPWR_MODE_WAKE_LPUART \
 									)										// Mode Stop + wakeup RTC + GPIO
 #define ITSDK_LOWPOWER_RTC_MS		500										// RTC wake up after 500ms
 #define ITSDK_LOWPOWER_GPIO_A_KEEP	(  __LP_GPIO_1  \
@@ -91,7 +92,7 @@
 									 | __LP_GPIO_13	\
 									 | __LP_GPIO_14	\
 									 | __LP_GPIO_15	\
-		                            )										// Keep activ (led 2, uart, lpuart, radio, spi1, sx1276 GPIO4)
+		                            )										// Keep activ (led 2, lpuart, radio, spi1, sx1276 GPIO4)
 #define ITSDK_LOWPOWER_GPIO_B_KEEP	(  __LP_GPIO_0 \
 								     | __LP_GPIO_1 \
 									 | __LP_GPIO_2 \
@@ -154,7 +155,7 @@
 #define ITSDK_SECSTORE_CONSOLEKEY   "changeme"								// Default console passwd string (max 15 char)
 
 #define ITSDK_WITH_CONSOLE			__ENABLE								// Enable / Disable the Console feature
-#define ITSDK_CONSOLE_SERIAL		__UART_USART2							// Serial port to be used for console
+#define ITSDK_CONSOLE_SERIAL		__UART_LPUART1							// Serial port to be used for console
 #define ITSDK_CONSOLE_LINEBUFFER	40										// Max Size of a line in the console. Dropped after.
 #define ITSDK_CONSOLE_EXPIRE_S		300										// After 300 Seconds the console will lock automatically
 #define ITSKD_CONSOLE_COPYRIGHT		"(c) 2019 Exotic Systems - MuraWAN\r\n"	// copyright string

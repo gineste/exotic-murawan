@@ -114,18 +114,22 @@ machine_t machine = {
 
 void task() {
 //	statem(&machine);
-	log_info("+ \r\n");
+	log_info("time is %d\r\n",(uint32_t)itsdk_time_get_ms());
 }
 
 
 void project_setup() {
 	log_init(ITSDK_LOGGER_CONF);
 	log_info("Booting \r\n");
+	// reboot cause
+	log_info("Reset : %d\r\n",itsdk_getResetCause());
+	itsdk_cleanResetCause();
 
 	// Init at boot time
 	//loadConfig();
 
 	// Init LoRaWan stack
+
 	static itsdk_lorawan_channelInit_t channels= ITSDK_LORAWAN_CHANNEL;
 	#ifdef ITSDK_LORAWAN_CHANNEL
 		itsdk_lorawan_setup(__LORAWAN_REGION_EU868,&channels);
@@ -133,7 +137,9 @@ void project_setup() {
 		itsdk_lorawan_setup(__LORAWAN_REGION_EU868,NULL);
 	#endif
 
+
 	itdt_sched_registerSched(30000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
+
 }
 
 void project_loop() {
