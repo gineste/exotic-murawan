@@ -1,0 +1,9 @@
+Debug
+objects.list
+objects.mk
+sources.mk
+Core
+Drivers
+ItSdk
+startup
+makefile
