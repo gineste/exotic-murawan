@@ -40,7 +40,7 @@
 #define ITSDK_PLATFORM 				__PLATFORM_STM32L0						// Hardware platform selection
 #define ITSDK_DEVICE				__DEVICE_STM32L072XX					// Specific device
 #define ITSDK_RAM_SIZE				(20*1024)								// RAM Memory size
-#define ITSDK_WITH_UART				( __UART_USART2 )						// Use LPUART1 and USART2 for debug
+#define ITSDK_WITH_UART				( __UART_USART2 | __UART_LPUART1 )		// Use LPUART1 and USART2 for debug
 #define ITSDK_WITH_RTC				__RTC_ENABLED							// The Rtc is usd in the firmware
 #define ITSDK_WITH_CLK_ADJUST		__ENABLE								// The RTC (and wtachdog) is calibrated
 #define ITSDK_RTC_CLKFREQ			32768									// RTC clock source frequency
@@ -65,7 +65,7 @@
 #define ITSDK_WDG_CLKFREQ			37000									// Watchdog clock source frequency
 #define ITSDK_CORE_CLKFREQ			32000000								// Core Frequency of the chip
 
-#define ITSDK_LOGGER_CONF			0x0070									// error->info level on serial1 => USART2 (see logger.c)
+#define ITSDK_LOGGER_CONF			0x0770									// error->info level on serial1 => USART2 (see logger.c)
 																			// File | SErial 1 | Serial 2 | Debug ## Debug - Info - Warning - Error
 #define ITSDK_LOGGER_MODULE			( \
 									  __LOG_MOD_NONE		  \
