@@ -31,93 +31,28 @@
 #include <it_sdk/time/time.h>
 #include <it_sdk/logger/logger.h>
 #include <it_sdk/sched/scheduler.h>
-#include <it_sdk/statemachine/statemachine.h>
-#include <it_sdk/eeprom/eeprom.h>
 #include <it_sdk/lorawan/lorawan.h>
 #include <it_sdk/encrypt/encrypt.h>
 #include <it_sdk/eeprom/securestore.h>
 #include <it_sdk/lowpower/lowpower.h>
+#include <it_sdk/statemachine/statemachine.h>
 
 
-#define ST_INIT 0
-#define ST_SETUP 1
-#define ST_SLEEP 2
+#include <murawan/radio.h>
+#include <murawan/machine.h>
 
-/*
-void updateTiming() {
-	log_debug("In update timing\r\n");
-}
-
-uint8_t stInit(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
-	log_debug("In Init %d,%d\r\n",cLoop,tLoop);
-
-	//uint16_t t = adc_getTemperature();
-	//log_debug("Temp : %d\r\n",t);
-	return ST_SETUP;
-}
-
-uint8_t stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
-	log_debug("In Setup %d,%d\r\n",cLoop,tLoop);
-
-
-	struct conf {
-		uint8_t	v1;
-		uint16_t v2;
-		uint32_t v3;
-	} s_conf;
-
-	uint8_t v;
-	if ( ! eeprom_read(&s_conf, sizeof(s_conf), 1,&v) ) {
-		log_debug("Flashing\r\n");
-		s_conf.v1 = 10;
-		s_conf.v2 = 0xA5A5;
-		s_conf.v3 = 0xFF5AA5FF;
-		eeprom_write(&s_conf, sizeof(s_conf), 1);
-	} else {
-		log_debug("Load version %d\r\n",v);
-		log_debug("v2 : %0X\r\n",s_conf.v2);
-	}
-
-
-	return ST_SLEEP;
-}
-
-uint8_t led = GPIO_PIN_SET;
-uint8_t stSleep(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
-	log_debug("In Sleep %d,%d\r\n",cLoop,tLoop);
-	led = (led==GPIO_PIN_SET)?GPIO_PIN_RESET:GPIO_PIN_SET;
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7,led);
-
-	log_info("time is %d\r\n",(uint32_t)itsdk_time_get_ms());
-	return ST_SLEEP;
-}
-*/
-
-/*
-machine_t machine = {
-    ST_INIT,				// currentState
-    LOOP_INIT_VALUE, 		// loopCounter
-    STATE_UNKNOWN,			// lastState
-    TOTAL_LOOP_INIT_VALUE,	// totalLoop
-    &updateTiming,			// Update age each time the machine is running - on each cycles.
-    {
-      //       UID        RESET       PROCE     P0      Name:XXXXXXX
-        { ST_INIT,        NULL,      &stInit,    NULL,   	"Init"   },
-        { ST_SETUP, 	  NULL,	   &stSetup,   	 NULL,   	"Setup"  },
-        { ST_SLEEP, 	  NULL,     &stSleep,    NULL,   	"Sleep"  },
-        { STATE_LAST,	  NULL,         NULL,    NULL,      "Error"  }
-
-    }
-};
-*/
-
-
+/**
+ * Process the state machine on regular basis
+ */
+extern machine_t murawan_stm;
 void task() {
-//	statem(&machine);
-	log_info("time is %d\r\n",(uint32_t)itsdk_time_get_ms());
+	statem(&murawan_stm);
 }
 
 
+/**
+ * On Reset setup
+ */
 void project_setup() {
 	log_init(ITSDK_LOGGER_CONF);
 	log_info("Booting \r\n");
@@ -125,23 +60,17 @@ void project_setup() {
 	log_info("Reset : %d\r\n",itsdk_getResetCause());
 	itsdk_cleanResetCause();
 
-	// Init at boot time
-	//loadConfig();
+	// Hardware configuration
+	// Rq: the hardware init is managed by Cube Mx but default setting with functional
+	//     impacts are initialized here
+	murawan_antenna_selectPifa();
 
-	// Init LoRaWan stack
-
-	static itsdk_lorawan_channelInit_t channels= ITSDK_LORAWAN_CHANNEL;
-	#ifdef ITSDK_LORAWAN_CHANNEL
-		itsdk_lorawan_setup(__LORAWAN_REGION_EU868,&channels);
-	#else
-		itsdk_lorawan_setup(__LORAWAN_REGION_EU868,NULL);
-	#endif
-
-
-	itdt_sched_registerSched(30000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
-
+	itdt_sched_registerSched(12000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
 }
 
+/**
+ * LowPower loop
+ */
 void project_loop() {
 	itsdk_lorawan_loop();
 }
