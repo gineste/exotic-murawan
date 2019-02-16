@@ -19,6 +19,7 @@
 #include <it_sdk/encrypt/encrypt.h>
 #include <it_sdk/eeprom/eeprom.h>
 
+#include <drivers/temphygropressure/bosh_bme280/bme280.h>
 
 #include <murawan/machine.h>
 
@@ -78,8 +79,10 @@ uint8_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 		itsdk_lorawan_setup(__LORAWAN_REGION_EU868,NULL);
 	#endif
 
-
-
+	// setup sensors
+	if (drivers_bme280_setup(BME280_MODE_WEATHER_MONITORING) != BME280_SUCCESS ) {
+		log_error("[BME280] Init Failed\r\n");
+	}
 
 	return MURAWAN_ST_SLEEP;
 }
@@ -104,6 +107,18 @@ uint8_t murawan_stm_stSleep(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 	log_debug("In Sleep %d,%d\r\n",cLoop,tLoop);
 
 	uint8_t t[20] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
+
+	// Get the sensor values
+	int32_t  temp;
+	uint32_t humidity;
+	uint32_t pressure;
+	if ( drivers_bme280_getSensors(&temp,&pressure,&humidity) != BME280_SUCCESS ) {
+		log_error("[BME280] Read Error\r\n");
+	} else {
+		log_info("Temp is %d.%d oC\r\n",temp/1000,(temp/100)-((temp/1000)*10));
+		log_info("Humidity is %d.%d %\r\n",humidity/1000,(humidity/100)-((humidity/1000)*10));
+		log_info("Pressure is %d.%d hPa\r\n",pressure/100,(pressure/10)-((pressure/100)*10));
+	}
 
 	if ( !itsdk_lorawan_hasjoined() ) {
 		if ( itsdk_lorawan_join_sync() == LORAWAN_JOIN_SUCCESS ) {

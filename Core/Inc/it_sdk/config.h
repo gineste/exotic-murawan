@@ -52,9 +52,12 @@
 #define ITSDK_VBAT_MIN				2000									// MIN value for VBAT in mv
 #define ITSDK_VBAT_MAX				3300									// MAX value for VBAT in mv
 #define ITSDK_VBAT_ADC_PIN			-1										// ADC pin used to measure VBAT (if -1 assume VBAT = VCC)
-#define ITSDK_WITH_SPI				__SPI_ENABLED							// Use SPI (inludes the strutures)
-#define ITSDK_SPI_HANDLER_TYPE		SPI_HandleTypeDef						// The name of the Spi structure to be used for the targeted MCU
-#define ITSDK_SPI_TIMEOUT			100										// SPI transaction timeout in ms
+#define ITSDK_WITH_SPI				__SPI_ENABLED							// Use SPI (includes the structures)
+#define ITSDK_SPI_HANDLER_TYPE		SPI_HandleTypeDef						//    The name of the Spi structure to be used for the targeted MCU
+#define ITSDK_SPI_TIMEOUT			100										//    SPI transaction timeout in ms
+#define ITSDK_WITH_I2C				__I2C_ENABLED							// I2C is enabled (__I2C_NONE / __I2C_ENABLED )
+#define ITSDK_I2C_HANDLER_TYPE		I2C_HandleTypeDef						//    The name of the I2C structure to be used for the targeted MCU
+#define ITSDK_I2C_TIMEOUT			100										//    I2C transaction timeout in ms
 #define ITSDK_WITH_HW_TIMER			__TIMER_ENABLED							// Use Hardware Timer
 #define ITSDK_HW_TIMER1_HANDLE		htim21									// Timer handler to be used as primary timer
 #define ITSDK_HW_TIMER1_ID			21										// Timer hadware 1 - id/name
@@ -65,7 +68,7 @@
 #define ITSDK_WDG_CLKFREQ			37000									// Watchdog clock source frequency
 #define ITSDK_CORE_CLKFREQ			32000000								// Core Frequency of the chip
 
-#define ITSDK_LOGGER_CONF			0x0770									// error->info level on serial1 => USART2 (see logger.c)
+#define ITSDK_LOGGER_CONF			0x0700									// error->info level on serial1 => USART2 (see logger.c)
 																			// File | SErial 1 | Serial 2 | Debug ## Debug - Info - Warning - Error
 #define ITSDK_LOGGER_MODULE			( \
 									  __LOG_MOD_NONE		  \
@@ -81,7 +84,8 @@
 									/*| __LOWPWR_MODE_WAKE_LPUART */\
 									| __LOWPWR_MODE_WAKE_UART2 \
 									)										// Mode Stop + wakeup RTC + GPIO
-#define ITSDK_LOWPOWER_RTC_MS		4000										// RTC wake up after 500ms
+#define ITSDK_LOWPOWER_MINDUR_MS	5										// Under 5 ms sleep request, no need to sleep
+#define ITSDK_LOWPOWER_RTC_MS		4000									// RTC wake up after 500ms
 #define ITSDK_LOWPOWER_GPIO_A_KEEP	(  __LP_GPIO_1  \
 									 | __LP_GPIO_2  \
 									 | __LP_GPIO_3  \
@@ -102,10 +106,12 @@
 									 | __LP_GPIO_5 \
 									 | __LP_GPIO_6 \
 									 | __LP_GPIO_7 \
+									 | __LP_GPIO_8 \
+									 | __LP_GPIO_9 \
 									 | __LP_GPIO_12 \
 									 | __LP_GPIO_13 \
 									 | __LP_GPIO_14 \
-									)										// Keep activ (led 1,3,4), radio, button, spi2, sx1276 GPIO 0,1,2
+									)										// Keep activ (led 1,3,4), i2c,radio, button, spi2, sx1276 GPIO 0,1,2
 #define ITSDK_LOWPOWER_GPIO_C_KEEP	(   __LP_GPIO_0 \
 									  | __LP_GPIO_1 \
 									  | __LP_GPIO_2 \

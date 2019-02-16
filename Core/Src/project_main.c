@@ -37,6 +37,7 @@
 #include <it_sdk/lowpower/lowpower.h>
 #include <it_sdk/statemachine/statemachine.h>
 
+#include <it_sdk/configDrivers.h>
 
 #include <murawan/radio.h>
 #include <murawan/machine.h>
@@ -54,8 +55,10 @@ void task() {
  * On Reset setup
  */
 void project_setup() {
-	log_init(ITSDK_LOGGER_CONF);
-	log_info("Booting \r\n");
+	log_info("UUUUUUUUUUUUUUUUUUUUU\r\n");
+	log_info("UUUUUUUUUUUUUUUUUUUUU\r\n");
+	log_info("UUUUUUUUUUUUUUUUUUUUU\r\n");
+	log_info("Booting !!\r\n");
 	// reboot cause
 	log_info("Reset : %d\r\n",itsdk_getResetCause());
 	itsdk_cleanResetCause();
@@ -64,6 +67,7 @@ void project_setup() {
 	// Rq: the hardware init is managed by Cube Mx but default setting with functional
 	//     impacts are initialized here
 	murawan_antenna_selectPifa();
+
 
 	itdt_sched_registerSched(12000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
 }
