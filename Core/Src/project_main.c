@@ -59,9 +59,6 @@ void project_setup() {
 	log_info("UUUUUUUUUUUUUUUUUUUUU\r\n");
 	log_info("UUUUUUUUUUUUUUUUUUUUU\r\n");
 	log_info("Booting !!\r\n");
-	// reboot cause
-	log_info("Reset : %d\r\n",itsdk_getResetCause());
-	itsdk_cleanResetCause();
 
 	// Hardware configuration
 	// Rq: the hardware init is managed by Cube Mx but default setting with functional
