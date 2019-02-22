@@ -83,6 +83,11 @@ void murawan_print_state() {
 	_itsdk_console_printf("state.lastConnectTryS : %d\r\n",murawan_state.lastConnectTryS);
 	_itsdk_console_printf("state.lastMeasureS : %d\r\n",murawan_state.lastMeasureS);
 	_itsdk_console_printf("state.ackFailed : %d\r\n",murawan_state.ackFailed);
+
+	_itsdk_console_printf("state.lastTemp : %d.%d oC\r\n",murawan_state.lastTemp/1000,(murawan_state.lastTemp/100)-((murawan_state.lastTemp/1000)*10));
+	_itsdk_console_printf("state.lastHumidity : %d.%d \r\n",murawan_state.lastHumidity/1000,(murawan_state.lastHumidity/100)-((murawan_state.lastHumidity/1000)*10));
+	_itsdk_console_printf("state.lastPressure : %d.%d hPa\r\n",murawan_state.lastPressure/100,(murawan_state.lastPressure/10)-((murawan_state.lastPressure/100)*10));
+	_itsdk_console_printf("state.lastMLux : %d lux\r\n",murawan_state.lastMLux/1000,(murawan_state.lastMLux/100)-((murawan_state.lastMLux/1000)*10));
 }
 
 
@@ -109,13 +114,13 @@ itsdk_config_ret_e itsdk_config_app_commitConfiguration() {
 	return CONFIG_SUCCESS;
 }
 
-void itsdk_config_app_printConfig() {
-	_itsdk_console_printf("murawan.version : %02X\r\n",itsdk_config.app.version);
-	_itsdk_console_printf("murawan.sendDuty : %d s\r\n",itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S);
-	_itsdk_console_printf("murawan.ackDuty : %d s\r\n",itsdk_config.app.ackDuty*itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S);
-	_itsdk_console_printf("murawan.ackRetry : %d\r\n",itsdk_config.app.ackRetry);
-	_itsdk_console_printf("murawan.sleepDuty : %d s\r\n",itsdk_config.app.sleepDuty*itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S);
-	_itsdk_console_printf("murawan.antennaChoice : %d\r\n",itsdk_config.app.antennaChoice);
+void itsdk_config_app_printConfig(itsdk_configuration_nvm_t * c) {
+	_itsdk_console_printf("murawan.version : %02X\r\n",c->app.version);
+	_itsdk_console_printf("murawan.sendDuty : %d s\r\n",c->app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S);
+	_itsdk_console_printf("murawan.ackDuty : %d s\r\n",c->app.ackDuty*c->app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S);
+	_itsdk_console_printf("murawan.ackRetry : %d\r\n",c->app.ackRetry);
+	_itsdk_console_printf("murawan.sleepDuty : %d s\r\n",c->app.sleepDuty*c->app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S);
+	_itsdk_console_printf("murawan.antennaChoice : %d\r\n",c->app.antennaChoice);
 }
 
 // ========================================================================================

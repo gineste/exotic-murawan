@@ -40,7 +40,7 @@ typedef enum __attribute__ ((__packed__)) {
 
 #define MURAWAN_CONFIG_SENDDUTY		3		// By default send new data every 3xMURAWAN_CONFIG_TIME_BASE_Ss
 #define MURAWAN_CONFIG_ACKDUTY	   10		// Every 10x*(MURAWAN_CONFIG_ACKDUTY) => 5m ack is performed
-#define MURAWAN_CONFIG_ACKRETRY		6		// 3 ACK retry ( 30m ) before failing (this is not LoRaWan retry)
+#define MURAWAN_CONFIG_ACKRETRY		6		// 6 ACK retry ( 30m ) before failing (this is not LoRaWan retry)
 #define MURAWAN_CONFIG_SLEEPDUTY   20		// 20*MURAWAN_CONFIG_SENDDUTY (10 min) time before trying to reconnect
 #define MURAWAN_CONFIG_ANTENNA		MURAWAN_ANTENNA_PIFA
 
