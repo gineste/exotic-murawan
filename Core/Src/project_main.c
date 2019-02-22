@@ -50,23 +50,13 @@ void task() {
 	statem(&murawan_stm);
 }
 
-
 /**
  * On Reset setup
  */
 void project_setup() {
-	log_info("UUUUUUUUUUUUUUUUUUUUU\r\n");
-	log_info("UUUUUUUUUUUUUUUUUUUUU\r\n");
-	log_info("UUUUUUUUUUUUUUUUUUUUU\r\n");
 	log_info("Booting !!\r\n");
 
-	// Hardware configuration
-	// Rq: the hardware init is managed by Cube Mx but default setting with functional
-	//     impacts are initialized here
-	murawan_antenna_selectPifa();
-
-
-	itdt_sched_registerSched(12000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
+	itdt_sched_registerSched(MURAWAN_CONFIG_TIME_BASE_S*1000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
 }
 
 /**

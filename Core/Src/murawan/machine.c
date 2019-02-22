@@ -19,6 +19,7 @@
 #include <it_sdk/lorawan/lorawan.h>
 #include <it_sdk/encrypt/encrypt.h>
 #include <it_sdk/eeprom/eeprom.h>
+#include <it_sdk/eeprom/sdk_config.h>
 
 #include <drivers/temphygropressure/bosh_bme280/bme280.h>
 #include <drivers/light/max44009/max44009.h>
@@ -27,53 +28,41 @@
 #include <murawan/machine.h>
 
 machine_t murawan_stm = {
-	MURAWAN_ST_INIT,			// currentState
+	MURAWAN_ST_SETUP,			// currentState
     LOOP_INIT_VALUE, 			// loopCounter
     STATE_UNKNOWN,				// lastState
     TOTAL_LOOP_INIT_VALUE,		// totalLoop
     &murawan_stm_updateTiming,	// Update age each time the machine is running - on each cycles.
     {
       //       UID                RESET       PROCE      			 P0      Name:XXXXXXX
-        { MURAWAN_ST_INIT,        NULL,      &murawan_stm_stInit,    NULL,   	"Init"   },
         { MURAWAN_ST_SETUP, 	  NULL,	    &murawan_stm_stSetup,    NULL,   	"Setup"  },
-        { MURAWAN_ST_SLEEP, 	  NULL,     &murawan_stm_stSleep,    NULL,   	"Sleep"  },
-        { STATE_LAST,	 		 NULL,          NULL,  				  NULL,     "Error"  }
+        { MURAWAN_ST_WAIT4CONF,   NULL,     &murawan_stm_stWaitC,    NULL,   	"Wait"   },
+        { MURAWAN_ST_RUN, 	 	  NULL,     &murawan_stm_stRun,   	 NULL,   	"Run"    },
+        { STATE_LAST,	 		  NULL,     NULL,  					 NULL,      "Error"  }
 
     }
 };
 
-
+/**
+ * On every machine cycle, call the timing update;
+ * The precision is 1S so the scheduler period should not be lower than 1s
+ */
 void murawan_stm_updateTiming() {
-	log_debug("In update timing\r\n");
+	uint64_t now = itsdk_time_get_ms();
+	uint32_t durationS =(uint32_t)((now - murawan_state.lastTimeUpdateMs)/1000);
+	murawan_state.lastTimeUpdateMs += (durationS*1000);
+	murawan_state.lastAckTestS += durationS;
+	murawan_state.lastConnectTryS += durationS;
+	murawan_state.lastMeasureS += durationS;
 }
 
-uint8_t murawan_stm_stInit(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
-	log_debug("In Init %d,%d\r\n",cLoop,tLoop);
-
-	return MURAWAN_ST_SETUP;
-}
-
+/**
+ * Setup step, here we are configuring the hardware and software stuff
+ */
 uint8_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
 	log_debug("In Setup %d,%d\r\n",cLoop,tLoop);
 
-
-	struct conf {
-		uint8_t	v1;
-		uint16_t v2;
-		uint32_t v3;
-	} s_conf;
-
-	uint8_t v;
-	if ( ! eeprom_read(&s_conf, sizeof(s_conf), 1,&v) ) {
-		log_debug("Flashing\r\n");
-		s_conf.v1 = 10;
-		s_conf.v2 = 0xA5A5;
-		s_conf.v3 = 0xFF5AA5FF;
-		eeprom_write(&s_conf, sizeof(s_conf), 1);
-	} else {
-		log_debug("Load version %d\r\n",v);
-		log_debug("v2 : %0X\r\n",s_conf.v2);
-	}
+	murawan_setup();
 
 	static itsdk_lorawan_channelInit_t channels= ITSDK_LORAWAN_CHANNEL;
 	#ifdef ITSDK_LORAWAN_CHANNEL
@@ -90,9 +79,36 @@ uint8_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 		log_error("[MAX44009] Init Failed\r\n");
 	}
 
-	return MURAWAN_ST_SLEEP;
+
+	uint8_t devEui[8];
+	itsdk_lorawan_getDeviceEUI(devEui);
+	uint8_t i = 0;
+	while ( i < 8 && devEui[i] == 0 ) i++;
+	if  ( i == 8 ) {
+		// The device is not yet initialized
+		return MURAWAN_ST_WAIT4CONF;
+	} else {
+		// Ready to go
+		return MURAWAN_ST_RUN;
+	}
+
 }
 
+
+/**
+ * Until the configuration of the deviceId is correct we stay in the stWait
+ */
+uint8_t murawan_stm_stWaitC(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
+
+	// Assuming the more convinient way is to reset after configuration
+	return MURAWAN_ST_WAIT4CONF;
+
+}
+
+
+/**
+ * Main event loop
+ */
 
 void send_callback(itsdk_lorawan_send_t status, uint8_t port, uint8_t size, uint8_t * rxData) {
 	switch ( status ) {
@@ -109,7 +125,7 @@ void send_callback(itsdk_lorawan_send_t status, uint8_t port, uint8_t size, uint
 	}
 }
 
-uint8_t murawan_stm_stSleep(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
+uint8_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
 	log_debug("In Sleep %d,%d\r\n",cLoop,tLoop);
 
 
@@ -158,7 +174,7 @@ uint8_t murawan_stm_stSleep(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 				1,
 				__LORAWAN_DR_5,
 				LORAWAN_SEND_CONFIRMED,
-				ITSDK_LORAWAN_CNF_RETRY,
+				itsdk_config.sdk.lorawan.retries,
 				send_callback,
 				/*PAYLOAD_ENCRYPT_AESCTR | PAYLOAD_ENCRYPT_SPECK |*/ PAYLOAD_ENCRYPT_NONE
 		);
@@ -168,5 +184,5 @@ uint8_t murawan_stm_stSleep(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 	}
 
 	log_info("time is %d\r\n",(uint32_t)itsdk_time_get_ms());
-	return MURAWAN_ST_SLEEP;
+	return MURAWAN_ST_RUN;
 }

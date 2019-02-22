@@ -31,16 +31,26 @@
 #include <it_sdk/itsdk.h>
 #include <murawan/machine.h>
 
-#define MURAWAN_ST_INIT  0
-#define MURAWAN_ST_SETUP 1
-#define MURAWAN_ST_SLEEP 2
+#define MURAWAN_ST_SETUP 		0
+#define MURAWAN_ST_WAIT4CONF 	1
+#define MURAWAN_ST_RUN 			2
 
+typedef struct {
+	uint64_t	lastTimeUpdateMs;			// in ms => last time we updated the timings
+	uint32_t	lastMeasureS;				// time in S since last measure
+	uint32_t	lastAckTestS;				// time in S since last test
+	uint32_t	lastConnectTryS;			// time in S since last connection try
+	uint8_t		ackFailed;					// Number of ack tried failed
+
+} murawan_state_t;
+
+extern murawan_state_t murawan_state;
 
 void murawan_stm_updateTiming();
-uint8_t murawan_stm_stInit(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop);
 uint8_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop);
-uint8_t murawan_stm_stSleep(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop);
+uint8_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop);
+uint8_t murawan_stm_stWaitC(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop);
 
-
+void murawan_setup();
 
 #endif /* INC_MURAWAN_MACHINE_H_ */
