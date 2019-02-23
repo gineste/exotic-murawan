@@ -178,6 +178,7 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 
 		itsdk_lorawan_sendconf_t ack = LORAWAN_SEND_UNCONFIRMED;
 		if ( murawan_state.lastAckTestS > itsdk_config.app.ackDuty*itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S) {
+			murawan_state.lastAckTestS = 0;
 			ack = LORAWAN_SEND_CONFIRMED;
 		}
 
