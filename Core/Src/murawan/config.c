@@ -71,6 +71,8 @@ void murawan_setup() {
 	murawan_state.lastConnectTryS = 0;
 	murawan_state.lastMeasureS = 0;
 	murawan_state.ackFailed = 0;
+	murawan_state.connection = MURAWAN_CONNEXION_INIT;
+	murawan_state.connectionFailed = 0;
 
 	//
 
@@ -78,16 +80,20 @@ void murawan_setup() {
 
 // PRINT STATE
 void murawan_print_state() {
-	_itsdk_console_printf("state.lastTimeUpdateMs : %d\r\n",(uint32_t)(murawan_state.lastTimeUpdateMs/1000));
-	_itsdk_console_printf("state.lastAckTestS : %d\r\n",murawan_state.lastAckTestS);
-	_itsdk_console_printf("state.lastConnectTryS : %d\r\n",murawan_state.lastConnectTryS);
-	_itsdk_console_printf("state.lastMeasureS : %d\r\n",murawan_state.lastMeasureS);
+	_itsdk_console_printf("state.lastTimeUpdateMs : %d s\r\n",(uint32_t)(murawan_state.lastTimeUpdateMs/1000));
+	_itsdk_console_printf("state.lastAckTestS : %d s\r\n",murawan_state.lastAckTestS);
+	_itsdk_console_printf("state.lastConnectTryS : %d s\r\n",murawan_state.lastConnectTryS);
+	_itsdk_console_printf("state.lastMeasureS : %d s\r\n",murawan_state.lastMeasureS);
 	_itsdk_console_printf("state.ackFailed : %d\r\n",murawan_state.ackFailed);
 
 	_itsdk_console_printf("state.lastTemp : %d.%d oC\r\n",murawan_state.lastTemp/1000,(murawan_state.lastTemp/100)-((murawan_state.lastTemp/1000)*10));
 	_itsdk_console_printf("state.lastHumidity : %d.%d \r\n",murawan_state.lastHumidity/1000,(murawan_state.lastHumidity/100)-((murawan_state.lastHumidity/1000)*10));
 	_itsdk_console_printf("state.lastPressure : %d.%d hPa\r\n",murawan_state.lastPressure/100,(murawan_state.lastPressure/10)-((murawan_state.lastPressure/100)*10));
-	_itsdk_console_printf("state.lastMLux : %d lux\r\n",murawan_state.lastMLux/1000,(murawan_state.lastMLux/100)-((murawan_state.lastMLux/1000)*10));
+	_itsdk_console_printf("state.lastMLux : %d.%d lux\r\n",murawan_state.lastMLux/1000,(murawan_state.lastMLux/100)-((murawan_state.lastMLux/1000)*10));
+
+	_itsdk_console_printf("state.connection : %d \r\n",murawan_state.connection);
+	_itsdk_console_printf("state.connectionFailed : %d \r\n",murawan_state.connectionFailed);
+	_itsdk_console_printf("stm.currentState : %s \r\n",murawan_stm.stm[murawan_stm.currentState].name);
 }
 
 

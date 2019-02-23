@@ -36,6 +36,7 @@ typedef enum __attribute__ ((__packed__)) {
 	MURAWAN_ANTENNA_PCB=1
 } murawan_antenna_choice_e;
 
+
 #define MURAWAN_CONFIG_TIME_BASE_S 10		// Base of time in Second, use as unit for 	MURAWAN_CONFIG_SENDDUTY and others
 
 #define MURAWAN_CONFIG_SENDDUTY		3		// By default send new data every 3xMURAWAN_CONFIG_TIME_BASE_Ss
@@ -56,7 +57,6 @@ typedef struct {
 	uint8_t							ackRetry;		// Number of ackDuty retry before considering reconnection x ackDuty
 	uint8_t							sleepDuty;		// Period between two connection try when disconnected x sendDuty
 	murawan_antenna_choice_e		antennaChoice;	// Select the antenna to transmit
-
 
 	uint8_t							alignment[2];	// For 32bits size alignment
 } itsdk_configuration_app_t;

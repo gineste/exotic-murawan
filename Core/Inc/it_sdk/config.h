@@ -78,7 +78,7 @@
 																			// File | SErial 1 | Serial 2 | Debug ## Debug - Info - Warning - Error
 #define ITSDK_LOGGER_MODULE			( \
 									  __LOG_MOD_NONE		  \
-									| __LOG_MOD_STKLORA       \
+								/*	| __LOG_MOD_STKLORA   */  \
 								/*	| __LOG_MOD_STIMER    */  \
 								/*	| __LOG_MOD_LOWLORADBG */ \
 								/*	| __LOG_MOD_LOWLORAINF */ \

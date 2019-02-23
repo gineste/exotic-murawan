@@ -39,6 +39,7 @@ machine_t murawan_stm = {
         { MURAWAN_ST_WAIT4CONF,   NULL,     &murawan_stm_stWaitC,    NULL,   	"Wait"   },
         { MURAWAN_ST_RUN, 	 	  NULL,     &murawan_stm_stRun,   	 NULL,   	"Run"    },
         { MURAWAN_ST_SEND, 	 	  NULL,     &murawan_stm_stSend,   	 NULL,   	"Send"   },
+        { MURAWAN_ST_JOIN, 	 	  NULL,     &murawan_stm_stJoin,   	 NULL,   	"Join"   },
         { STATE_LAST,	 		  NULL,     NULL,  					 NULL,      "Error"  }
 
     }
@@ -90,7 +91,7 @@ uint16_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t 
 		return MURAWAN_ST_WAIT4CONF;
 	} else {
 		// Ready to go
-		return (MURAWAN_ST_RUN | STATE_IMMEDIATE_JUMP);
+		return (MURAWAN_ST_JOIN | STATE_IMMEDIATE_JUMP);
 	}
 
 }
@@ -108,13 +109,13 @@ uint16_t murawan_stm_stWaitC(void * p, uint8_t cState, uint16_t cLoop, uint32_t 
 
 
 /** ***************************************************************************************
- * Central decision loop
+ * Central decision loop / capture data and manage transmission
  */
 uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
-	log_info("In Run %d,%d\r\n",cLoop,tLoop);
 
 	// Get values when sendDuty time has been reached
 	if ( murawan_state.lastMeasureS >= itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S ) {
+		log_info("time is %d\r\n",(uint32_t)itsdk_time_get_ms());
 
 		murawan_state.lastMeasureS = 0;
 		if ( drivers_bme280_getSensors(&murawan_state.lastTemp,&murawan_state.lastPressure,&murawan_state.lastHumidity) != BME280_SUCCESS ) {
@@ -124,10 +125,14 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
 			ITSDK_ERROR_REPORT(APP_ERROR_MAX44009_FAULT,0);
 		}
 
-		return ( MURAWAN_ST_SEND | STATE_IMMEDIATE_JUMP);
+		if ( murawan_state.connection == MURAWAN_CONNEXION_JOINED )
+		   return ( MURAWAN_ST_SEND | STATE_IMMEDIATE_JUMP);
 	}
 
-	log_info("time is %d\r\n",(uint32_t)itsdk_time_get_ms());
+	if ( murawan_state.connection != MURAWAN_CONNEXION_JOINED ) {
+  	   // open for discussion, it is immediate or non ?
+	   return MURAWAN_ST_JOIN;
+	}
 	return MURAWAN_ST_RUN;
 }
 
@@ -136,8 +141,18 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
  *  LoRaWan Communication
  */
 
+/**
+ * Downlink Management
+ */
+void proceed_downlink(uint8_t rPort, uint8_t rSize,uint8_t * rData) {
+	log_info("Receiving data\r\n");
+
+}
+
+/**
+ * Data transmission
+ */
 uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
-	log_info("In Send %d,%d\r\n",cLoop,tLoop);
 
 	uint16_t next = MURAWAN_ST_RUN;
 
@@ -185,6 +200,9 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 			// case with downlink data
 		case LORAWAN_SEND_ACKED_WITH_DOWNLINK_PENDING:
 			// case with downlink data + pending downlink on server side.
+			proceed_downlink(rPort,rSize,rData);
+			murawan_state.ackFailed = 0;
+			break;
 		case LORAWAN_SEND_ACKED:
 			murawan_state.ackFailed = 0;
 			break;
@@ -193,9 +211,8 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 				murawan_state.ackFailed++;
 			}
 			if ( murawan_state.ackFailed > MURAWAN_CONFIG_ACKRETRY ) {
-				log_info("We are disconnected");
-				// Force disconnection / reconnection
-				// ajouter un state sur la connection qui soit never / connected / disconnected
+				murawan_state.connection = MURAWAN_CONNEXION_DISCONNECTED;
+				ITSDK_ERROR_REPORT(APP_ERROR_LORA_DISCONNECT,0);
 			}
 			break;
 		case LORAWAN_SEND_DUTYCYCLE:
@@ -203,6 +220,8 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 			next = MURAWAN_ST_SEND;
 			break;
 		case LORAWAN_SEND_NOT_JOINED:
+			murawan_state.connection = MURAWAN_CONNEXION_DISCONNECTED;
+			ITSDK_ERROR_REPORT(APP_ERROR_LORA_DISCONNECT,0);
 			break;
 
 		default:
@@ -211,3 +230,48 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 	}
 	return next;
 }
+
+/** ***************************************************************************************
+ *  LoRaWan Join procedure
+ */
+
+uint16_t murawan_stm_stJoin(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
+	uint16_t next = MURAWAN_ST_JOIN;
+	switch ( murawan_state.connection ) {
+	case MURAWAN_CONNEXION_INIT:
+		// first connection, no wait, loop until connection success
+		if ( !itsdk_lorawan_hasjoined() ) {
+			if ( itsdk_lorawan_join_sync() == LORAWAN_JOIN_SUCCESS ) {
+				murawan_state.connection = MURAWAN_CONNEXION_JOINED;
+				murawan_state.connectionFailed = 0;
+				next = MURAWAN_ST_RUN;
+			} else {
+				murawan_state.connectionFailed++;
+				if ( murawan_state.connectionFailed > 20 ) {
+					// slow down the retry
+					murawan_state.connection = MURAWAN_CONNEXION_DISCONNECTED;
+				}
+			}
+		}
+		break;
+	case MURAWAN_CONNEXION_DISCONNECTED:
+		// reconnection try on every
+		if (murawan_state.lastConnectTryS > itsdk_config.app.sleepDuty*itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S ) {
+			murawan_state.lastConnectTryS = 0;
+			if ( itsdk_lorawan_join_sync() == LORAWAN_JOIN_SUCCESS ) {
+				murawan_state.connection = MURAWAN_CONNEXION_JOINED;
+				murawan_state.connectionFailed=0;
+			} else {
+				murawan_state.connectionFailed++;
+			}
+			next = MURAWAN_ST_RUN;
+		}
+		break;
+	default:
+	case MURAWAN_CONNEXION_JOINED:
+		// we should not be here
+		next = MURAWAN_ST_RUN;
+	}
+	return next;
+}
+
