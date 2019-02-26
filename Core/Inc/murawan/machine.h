@@ -60,6 +60,13 @@ typedef struct {
 	murrawan_connection_state_e		connection;		// State of the LoRaWan connection
 	uint16_t	connectionFailed;			// Failed consecutive connection counter
 
+	uint16_t	lastCell1mV;				// Last Cell1 mV
+	uint16_t	lastCell2mV;				// Last Cell2 mV
+	uint16_t	lastCell3mV;				// Last Cell3 mV
+	uint16_t	lastvBatmV;					// Last VBat read
+	uint16_t	lastCoulomb;				// Last Coulomb Value in C
+	int32_t		lastCurrent;				// Last current measured in uA
+
 } murawan_state_t;
 
 extern murawan_state_t murawan_state;

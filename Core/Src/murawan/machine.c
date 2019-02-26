@@ -23,6 +23,8 @@
 
 #include <drivers/temphygropressure/bosh_bme280/bme280.h>
 #include <drivers/light/max44009/max44009.h>
+#include <drivers/nfc/st25dv/st25dv.h>
+#include <drivers/gauge/max17205/max17205.h>
 #include <it_sdk/lorawan/cayenne.h>
 
 #include <murawan/machine.h>
@@ -81,6 +83,22 @@ uint16_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t 
 		ITSDK_ERROR_REPORT(APP_ERROR_MAX44009_FAULT,0);
 	}
 
+	// setup Gauge
+	switch (drivers_max17205_setup(MAX17205_MODE_3CELLS_INT_TEMP) ) {
+	case MAX17205_SUCCESS:
+	case MAX17205_UNDERVOLT:
+		break;
+	default:
+		ITSDK_ERROR_REPORT(APP_ERROR_MAX17205_FAULT,0);
+		break;
+	}
+
+	// setup NFC
+	if (drivers_st25dv_setup(ST25DV_MODE_DEFAULT) != ST25DV_SUCCESS ) {
+		ITSDK_ERROR_REPORT(APP_ERROR_ST25DV_FAULT,0);
+	}
+
+
 	// Check is the device has been initialized of if still factory default (should be 00,00,00...)
 	uint8_t devEui[8];
 	itsdk_lorawan_getDeviceEUI(devEui);
@@ -112,6 +130,26 @@ uint16_t murawan_stm_stWaitC(void * p, uint8_t cState, uint16_t cLoop, uint32_t 
  * Central decision loop / capture data and manage transmission
  */
 uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
+
+
+	uint16_t v;
+	if ( drivers_max17205_isReady() == MAX17205_SUCCESS ) {
+		drivers_max17205_getVoltage(MAX17205_VBAT,&v);
+		murawan_state.lastvBatmV = v;
+		drivers_max17205_getVoltage(MAX17205_CELL3,&v);
+		murawan_state.lastCell3mV = v;
+		drivers_max17205_getVoltage(MAX17205_CELL2,&v);
+		murawan_state.lastCell2mV = v;
+		drivers_max17205_getVoltage(MAX17205_CELL1,&v);
+		murawan_state.lastCell1mV = v;
+		int32_t t;
+		drivers_max17205_getTemperature(&t);
+		drivers_max17205_getCurrent(&t);
+		murawan_state.lastCurrent = -t;
+		drivers_max17205_getCoulomb(&v);
+		murawan_state.lastCoulomb = v;
+	}
+
 
 	// Get values when sendDuty time has been reached
 	if ( murawan_state.lastMeasureS >= itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S ) {
@@ -155,14 +193,6 @@ void proceed_downlink(uint8_t rPort, uint8_t rSize,uint8_t * rData) {
 uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
 
 	uint16_t next = MURAWAN_ST_RUN;
-
-	if ( !itsdk_lorawan_hasjoined() ) {
-		if ( itsdk_lorawan_join_sync() == LORAWAN_JOIN_SUCCESS ) {
-			//
-		} else {
-			//
-		}
-	} else {
 
 		uint8_t frBuffer[128];
 		int index = 0;
@@ -228,7 +258,6 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 		default:
 			break;
 		}
-	}
 	return next;
 }
 

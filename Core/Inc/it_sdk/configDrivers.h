@@ -80,4 +80,39 @@
 #define __MAX44009_A0_LOW						0x0
 #define ITSDK_DRIVERS_MAX44009_ADDRESS			(DRIVER_MAX44009_DEVICE_ADR | __MAX44009_A0_LOW)	// Device address, based on the schematics
 
+
+// ------------------------------------------------------------------------
+// Gauge : MAX17205
+
+#define ITSDK_DRIVERS_MAX17205					__ENABLE
+#if ITSDK_DRIVERS_MAX17205 == __ENABLE
+	#ifndef __I2C_INCLUDED
+	  #define __I2C_INCLUDED
+	  #include "i2c.h"
+	#endif
+	#include <drivers/gauge/max17205/max17205.h>
+#endif
+#define ITSDK_DRIVERS_MAX17205_I2C				hi2c1						// I2C port to be used for communications
+#define ITSDK_DRIVERS_MAX17205_ALRT1_BANK		__BANK_B					// ALERT PIN Configuration
+#define ITSDK_DRIVERS_MAX17205_ALRT1_PIN		__LP_GPIO_7					//   __LP_GPIO_NONE if not used
+#define ITSDK_DRIVERS_MAX17205_RSENSE_MOHM		1000						// RSense in mOhm
+
+// ------------------------------------------------------------------------
+// NFC Tag : ST25DV
+
+#define ITSDK_DRIVERS_ST25DV					__ENABLE
+#if ITSDK_DRIVERS_ST25DV == __ENABLE
+	#ifndef __I2C_INCLUDED
+	  #define __I2C_INCLUDED
+	  #include "i2c.h"
+	#endif
+	#include <drivers/nfc/st25dv/st25dv.h>
+#endif
+#define ITSDK_DRIVERS_ST25DV_I2C				hi2c1						// I2C port to be used for communications
+#define ITSDK_DRIVERS_ST25DV_GPO_BANK			__BANK_B					// GPO Pin
+#define ITSDK_DRIVERS_ST25DV_GPO_PIN			__LP_GPIO_5					//   __LP_GPIO_NONE if not used
+#define ITSDK_DRIVERS_ST25DV_LPD_BANK			__BANK_B					// LPD Pin
+#define ITSDK_DRIVERS_ST25DV_LPD_PIN			__LP_GPIO_6					//   __LP_GPIO_NONE if not used
+
+
 #endif /* INC_IT_SDK_CONFIGDRIVERS_H_ */

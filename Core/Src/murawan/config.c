@@ -73,7 +73,12 @@ void murawan_setup() {
 	murawan_state.ackFailed = 0;
 	murawan_state.connection = MURAWAN_CONNEXION_INIT;
 	murawan_state.connectionFailed = 0;
-
+	murawan_state.lastCell1mV = 0;
+	murawan_state.lastCell2mV = 0;
+	murawan_state.lastCell3mV = 0;
+	murawan_state.lastvBatmV = 0;
+	murawan_state.lastCurrent = 0;
+	murawan_state.lastCoulomb = 0;
 	//
 
 }
@@ -90,6 +95,13 @@ void murawan_print_state() {
 	_itsdk_console_printf("state.lastHumidity : %d.%d \r\n",murawan_state.lastHumidity/1000,(murawan_state.lastHumidity/100)-((murawan_state.lastHumidity/1000)*10));
 	_itsdk_console_printf("state.lastPressure : %d.%d hPa\r\n",murawan_state.lastPressure/100,(murawan_state.lastPressure/10)-((murawan_state.lastPressure/100)*10));
 	_itsdk_console_printf("state.lastMLux : %d.%d lux\r\n",murawan_state.lastMLux/1000,(murawan_state.lastMLux/100)-((murawan_state.lastMLux/1000)*10));
+
+	_itsdk_console_printf("state.lastCell1mV : %d mV\r\n",murawan_state.lastCell1mV);
+	_itsdk_console_printf("state.lastCell2mV : %d mV\r\n",murawan_state.lastCell2mV);
+	_itsdk_console_printf("state.lastCell3mV : %d mV\r\n",murawan_state.lastCell3mV);
+	_itsdk_console_printf("state.lastvBatmV : %d mV\r\n",murawan_state.lastvBatmV);
+	_itsdk_console_printf("state.lastCurrent : %d uA\r\n",murawan_state.lastCurrent);
+	_itsdk_console_printf("state.lastCoulomb : %d C\r\n",murawan_state.lastCoulomb);
 
 	_itsdk_console_printf("state.connection : %d \r\n",murawan_state.connection);
 	_itsdk_console_printf("state.connectionFailed : %d \r\n",murawan_state.connectionFailed);
