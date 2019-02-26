@@ -6,3 +6,6 @@
 * Se connecte au reseau LoRa en détectant les déconnection par des ack émis régulièrement et paramétrable. Après un nombre donné de Ack manqué consecutifs la deconnection et identifiée et un processus de reconnection est lancé avec une fréquence paramétrable.
 * Une fois connectée, les données sont emises sur le réseau au format cayenne.
 
+## MVP3
+* Capture des informations de niveau de batterie. La periode est donnée par le parametre batDuty par pas de 10 minutes.
+* Selon que l'alim est suffisante ou non seule le vbat est remonté ou l'ensemble des information des cellules sont remontés.

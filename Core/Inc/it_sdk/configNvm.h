@@ -37,14 +37,15 @@ typedef enum __attribute__ ((__packed__)) {
 } murawan_antenna_choice_e;
 
 
-#define MURAWAN_CONFIG_TIME_BASE_S 10		// Base of time in Second, use as unit for 	MURAWAN_CONFIG_SENDDUTY and others
+#define MURAWAN_CONFIG_TIME_BASE_S 			10		// Base of time in Second, use as unit for 	MURAWAN_CONFIG_SENDDUTY and others
+#define MURAWAN_CONFIG_BATDUTY_TIME_BASE_M	10		// Base of time in Minutes for the BADDUTY
 
 #define MURAWAN_CONFIG_SENDDUTY		3		// By default send new data every 3xMURAWAN_CONFIG_TIME_BASE_Ss
 #define MURAWAN_CONFIG_ACKDUTY	   10		// Every 10x*(MURAWAN_CONFIG_ACKDUTY) => 5m ack is performed
 #define MURAWAN_CONFIG_ACKRETRY		6		// 6 ACK retry ( 30m ) before failing (this is not LoRaWan retry)
 #define MURAWAN_CONFIG_SLEEPDUTY   20		// 20*MURAWAN_CONFIG_SENDDUTY (10 min) time before trying to reconnect
 #define MURAWAN_CONFIG_ANTENNA		MURAWAN_ANTENNA_PIFA
-
+#define MURAWAN_CONFIG_BATDUTY	   12		// Every 12*10m = 2h send the battery status frame
 
 /**
  * The application configuration specific fields are stored in this structure
@@ -56,9 +57,10 @@ typedef struct {
 	uint8_t							ackDuty;		// Number of sendDuty period before requesting a ACK to verify Network connectivity x sendDuty
 	uint8_t							ackRetry;		// Number of ackDuty retry before considering reconnection x ackDuty
 	uint8_t							sleepDuty;		// Period between two connection try when disconnected x sendDuty
+	uint8_t							batDuty;		// Period between two battery status communications x10m
 	murawan_antenna_choice_e		antennaChoice;	// Select the antenna to transmit
 
-	uint8_t							alignment[2];	// For 32bits size alignment
+	uint8_t							alignment[1];	// For 32bits size alignment
 } itsdk_configuration_app_t;
 
 

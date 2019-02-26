@@ -36,7 +36,13 @@
 #define MURAWAN_ST_WAIT4CONF 	1
 #define MURAWAN_ST_RUN 			2
 #define MURAWAN_ST_SEND			3
-#define MURAWAN_ST_JOIN			4
+#define MURAWAN_ST_SENDBAT		4
+#define MURAWAN_ST_JOIN			5
+
+
+#define FRAME_SENSOR			((void *)0)
+#define FRAME_BAT				((void *)1)
+
 
 typedef enum __attribute__ ((__packed__)) {
 	MURAWAN_CONNEXION_INIT = 0,
@@ -48,6 +54,7 @@ typedef enum __attribute__ ((__packed__)) {
 typedef struct {
 	uint64_t	lastTimeUpdateMs;			// in ms => last time we updated the timings
 	uint32_t	lastMeasureS;				// time in S since last measure
+	uint32_t	lastBatReportS;				// time in S since last bat report
 	uint32_t	lastAckTestS;				// time in S since last test
 	uint32_t	lastConnectTryS;			// time in S since last connection try
 	uint8_t		ackFailed;					// Number of ack tried failed

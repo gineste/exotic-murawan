@@ -36,13 +36,14 @@ machine_t murawan_stm = {
     TOTAL_LOOP_INIT_VALUE,		// totalLoop
     &murawan_stm_updateTiming,	// Update age each time the machine is running - on each cycles.
     {
-      //       UID                RESET       PROCE      			 P0      Name:XXXXXXX
-        { MURAWAN_ST_SETUP, 	  NULL,	    &murawan_stm_stSetup,    NULL,   	"Setup"  },
-        { MURAWAN_ST_WAIT4CONF,   NULL,     &murawan_stm_stWaitC,    NULL,   	"Wait"   },
-        { MURAWAN_ST_RUN, 	 	  NULL,     &murawan_stm_stRun,   	 NULL,   	"Run"    },
-        { MURAWAN_ST_SEND, 	 	  NULL,     &murawan_stm_stSend,   	 NULL,   	"Send"   },
-        { MURAWAN_ST_JOIN, 	 	  NULL,     &murawan_stm_stJoin,   	 NULL,   	"Join"   },
-        { STATE_LAST,	 		  NULL,     NULL,  					 NULL,      "Error"  }
+      //       UID                RESET       PROCE      			 P0      		Name:XXXXXXX
+        { MURAWAN_ST_SETUP, 	  NULL,	    &murawan_stm_stSetup,    NULL,   			"Setup"  },
+        { MURAWAN_ST_WAIT4CONF,   NULL,     &murawan_stm_stWaitC,    NULL,   			"Wait"   },
+        { MURAWAN_ST_RUN, 	 	  NULL,     &murawan_stm_stRun,   	 NULL,   			"Run"    },
+        { MURAWAN_ST_SEND, 	 	  NULL,     &murawan_stm_stSend,   	 FRAME_SENSOR,	   	"SendS"  },
+        { MURAWAN_ST_SENDBAT,  	  NULL,     &murawan_stm_stSend,   	 FRAME_BAT,   		"SendB"  },
+        { MURAWAN_ST_JOIN, 	 	  NULL,     &murawan_stm_stJoin,   	 NULL,   			"Join"   },
+        { STATE_LAST,	 		  NULL,     NULL,  					 NULL,      		"Error"  }
 
     }
 };
@@ -58,6 +59,7 @@ void murawan_stm_updateTiming() {
 	murawan_state.lastAckTestS += durationS;
 	murawan_state.lastConnectTryS += durationS;
 	murawan_state.lastMeasureS += durationS;
+	murawan_state.lastBatReportS += durationS;
 }
 
 /** ***************************************************************************************
@@ -132,27 +134,13 @@ uint16_t murawan_stm_stWaitC(void * p, uint8_t cState, uint16_t cLoop, uint32_t 
 uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
 
 
-	uint16_t v;
-	if ( drivers_max17205_isReady() == MAX17205_SUCCESS ) {
-		drivers_max17205_getVoltage(MAX17205_VBAT,&v);
-		murawan_state.lastvBatmV = v;
-		drivers_max17205_getVoltage(MAX17205_CELL3,&v);
-		murawan_state.lastCell3mV = v;
-		drivers_max17205_getVoltage(MAX17205_CELL2,&v);
-		murawan_state.lastCell2mV = v;
-		drivers_max17205_getVoltage(MAX17205_CELL1,&v);
-		murawan_state.lastCell1mV = v;
-		int32_t t;
-		drivers_max17205_getTemperature(&t);
-		drivers_max17205_getCurrent(&t);
-		murawan_state.lastCurrent = -t;
-		drivers_max17205_getCoulomb(&v);
-		murawan_state.lastCoulomb = v;
+	if ( murawan_state.connection != MURAWAN_CONNEXION_JOINED ) {
+  	   // open for discussion, it is immediate or non ?
+	   return MURAWAN_ST_JOIN;
 	}
 
-
 	// Get values when sendDuty time has been reached
-	if ( murawan_state.lastMeasureS >= itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S ) {
+	if ( itsdk_config.app.sendDuty > 0 && murawan_state.lastMeasureS >= itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S ) {
 		log_info("time is %d\r\n",(uint32_t)itsdk_time_get_ms());
 
 		murawan_state.lastMeasureS = 0;
@@ -167,9 +155,25 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
 		   return ( MURAWAN_ST_SEND | STATE_IMMEDIATE_JUMP);
 	}
 
-	if ( murawan_state.connection != MURAWAN_CONNEXION_JOINED ) {
-  	   // open for discussion, it is immediate or non ?
-	   return MURAWAN_ST_JOIN;
+	// Low priority - measure the battery levels
+	if ( itsdk_config.app.batDuty > 0 && murawan_state.lastBatReportS >= itsdk_config.app.batDuty*MURAWAN_CONFIG_BATDUTY_TIME_BASE_M*60 ) {
+		murawan_state.lastBatReportS = 0;
+		switch ( drivers_max17205_isReady() ) {
+		case MAX17205_SUCCESS:
+			drivers_max17205_getVoltage(MAX17205_CELL3,&murawan_state.lastCell3mV);
+			drivers_max17205_getVoltage(MAX17205_CELL2,&murawan_state.lastCell2mV);
+			drivers_max17205_getVoltage(MAX17205_CELL1,&murawan_state.lastCell1mV);
+			drivers_max17205_getCoulomb(&murawan_state.lastCoulomb);					// no break, normal
+			murawan_state.lastCoulomb = 0xFFFF - murawan_state.lastCoulomb;				// because coulomb decreases when current going out of battery
+		case MAX17205_UNDERVOLT:
+			drivers_max17205_getVoltage(MAX17205_VBAT,&murawan_state.lastvBatmV);
+			drivers_max17205_getCurrent(&murawan_state.lastCurrent);
+			murawan_state.lastCurrent = -murawan_state.lastCurrent;						// because current is negative when going out of battery
+			return ( MURAWAN_ST_SENDBAT | STATE_IMMEDIATE_JUMP);
+			break;
+		default:
+			break;
+		}
 	}
 	return MURAWAN_ST_RUN;
 }
@@ -193,10 +197,13 @@ void proceed_downlink(uint8_t rPort, uint8_t rSize,uint8_t * rData) {
 uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
 
 	uint16_t next = MURAWAN_ST_RUN;
+	uint8_t frBuffer[128];
+	int index = 0;
+	uint8_t sPort=1;
+	itsdk_cayenne_data_u cayenne;
 
-		uint8_t frBuffer[128];
-		int index = 0;
-		itsdk_cayenne_data_u cayenne;
+	if ( p == FRAME_SENSOR ) {
+
 		cayenne.temperature = murawan_state.lastTemp/100;	// from mC to dC
 		itsdk_cayenne_encodePayload(0,ITSDK_CAYENNE_TYPE_TEMPERATURE,&cayenne,frBuffer,&index,128);
 		cayenne.humidity = murawan_state.lastHumidity / 500; // from m% to 0,5%
@@ -205,28 +212,43 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 		itsdk_cayenne_encodePayload(2,ITSDK_CAYENNE_TYPE_BAROMETER,&cayenne,frBuffer,&index,128);
 		cayenne.illuminance = murawan_state.lastMLux / 1000; // from mLux to Lux
 		itsdk_cayenne_encodePayload(3,ITSDK_CAYENNE_TYPE_ILLUMINANCE,&cayenne,frBuffer,&index,128);
+		sPort = 1;
 
-		itsdk_lorawan_sendconf_t ack = LORAWAN_SEND_UNCONFIRMED;
-		if ( murawan_state.lastAckTestS > itsdk_config.app.ackDuty*itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S) {
-			murawan_state.lastAckTestS = 0;
-			ack = LORAWAN_SEND_CONFIRMED;
-		}
+	} else if ( p == FRAME_BAT ) {
+		cayenne.analog_input = murawan_state.lastvBatmV/10;
+		itsdk_cayenne_encodePayload(8,ITSDK_CAYENNE_TYPE_ANALOG_INPUT,&cayenne,frBuffer,&index,128);
+		cayenne.analog_input = murawan_state.lastCell1mV/10;
+		itsdk_cayenne_encodePayload(9,ITSDK_CAYENNE_TYPE_ANALOG_INPUT,&cayenne,frBuffer,&index,128);
+		cayenne.analog_input = murawan_state.lastCell2mV/10;
+		itsdk_cayenne_encodePayload(10,ITSDK_CAYENNE_TYPE_ANALOG_INPUT,&cayenne,frBuffer,&index,128);
+		cayenne.analog_input = murawan_state.lastCell3mV/10;
+		itsdk_cayenne_encodePayload(11,ITSDK_CAYENNE_TYPE_ANALOG_INPUT,&cayenne,frBuffer,&index,128);
+		cayenne.analog_input = murawan_state.lastCoulomb;
+		itsdk_cayenne_encodePayload(12,ITSDK_CAYENNE_TYPE_ANALOG_INPUT,&cayenne,frBuffer,&index,128);
+		sPort = 2;
+	}
 
-		uint8_t rPort,rSize=32;
-		uint8_t rData[32];
-		itsdk_lorawan_send_t r = itsdk_lorawan_send_sync(
-				frBuffer,
-				index,
-				1,
-				__LORAWAN_DR_5,
-				ack,
-				itsdk_config.sdk.lorawan.retries,
-				&rPort,
-				&rSize,
-				rData,
-				/*PAYLOAD_ENCRYPT_AESCTR | PAYLOAD_ENCRYPT_SPECK |*/ PAYLOAD_ENCRYPT_NONE
-		);
-		switch ( r ) {
+	itsdk_lorawan_sendconf_t ack = LORAWAN_SEND_UNCONFIRMED;
+	if ( murawan_state.lastAckTestS > itsdk_config.app.ackDuty*itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S) {
+		murawan_state.lastAckTestS = 0;
+		ack = LORAWAN_SEND_CONFIRMED;
+	}
+
+	uint8_t rPort,rSize=32;
+	uint8_t rData[32];
+	itsdk_lorawan_send_t r = itsdk_lorawan_send_sync(
+			frBuffer,
+			index,
+			sPort,
+			__LORAWAN_DR_5,
+			ack,
+			itsdk_config.sdk.lorawan.retries,
+			&rPort,
+			&rSize,
+			rData,
+			/*PAYLOAD_ENCRYPT_AESCTR | PAYLOAD_ENCRYPT_SPECK |*/ PAYLOAD_ENCRYPT_NONE
+	);
+	switch ( r ) {
 		case LORAWAN_SEND_ACKED_WITH_DOWNLINK:
 			// case with downlink data
 		case LORAWAN_SEND_ACKED_WITH_DOWNLINK_PENDING:
@@ -257,7 +279,7 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 
 		default:
 			break;
-		}
+	}
 	return next;
 }
 

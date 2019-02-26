@@ -70,6 +70,7 @@ void murawan_setup() {
 	murawan_state.lastAckTestS = 0;
 	murawan_state.lastConnectTryS = 0;
 	murawan_state.lastMeasureS = 0;
+	murawan_state.lastBatReportS = 0;
 	murawan_state.ackFailed = 0;
 	murawan_state.connection = MURAWAN_CONNEXION_INIT;
 	murawan_state.connectionFailed = 0;
@@ -89,6 +90,7 @@ void murawan_print_state() {
 	_itsdk_console_printf("state.lastAckTestS : %d s\r\n",murawan_state.lastAckTestS);
 	_itsdk_console_printf("state.lastConnectTryS : %d s\r\n",murawan_state.lastConnectTryS);
 	_itsdk_console_printf("state.lastMeasureS : %d s\r\n",murawan_state.lastMeasureS);
+	_itsdk_console_printf("state.lastBatReportS : %d s\r\n",murawan_state.lastBatReportS);
 	_itsdk_console_printf("state.ackFailed : %d\r\n",murawan_state.ackFailed);
 
 	_itsdk_console_printf("state.lastTemp : %d.%d oC\r\n",murawan_state.lastTemp/1000,(murawan_state.lastTemp/100)-((murawan_state.lastTemp/1000)*10));
@@ -118,6 +120,7 @@ itsdk_config_ret_e itsdk_config_app_resetToFactory() {
 	itsdk_config.app.ackRetry = MURAWAN_CONFIG_ACKRETRY;
 	itsdk_config.app.sleepDuty = MURAWAN_CONFIG_SLEEPDUTY;
 	itsdk_config.app.antennaChoice = MURAWAN_ANTENNA_PIFA;
+	itsdk_config.app.batDuty = MURAWAN_CONFIG_BATDUTY;
 	return CONFIG_RESTORED_FROM_FACTORY;
 }
 
@@ -138,6 +141,7 @@ void itsdk_config_app_printConfig(itsdk_configuration_nvm_t * c) {
 	_itsdk_console_printf("murawan.ackDuty : %d s\r\n",c->app.ackDuty*c->app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S);
 	_itsdk_console_printf("murawan.ackRetry : %d\r\n",c->app.ackRetry);
 	_itsdk_console_printf("murawan.sleepDuty : %d s\r\n",c->app.sleepDuty*c->app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S);
+	_itsdk_console_printf("murawan.batDuty : %d m\r\n",c->app.batDuty*MURAWAN_CONFIG_BATDUTY_TIME_BASE_M);
 	_itsdk_console_printf("murawan.antennaChoice : %d\r\n",c->app.antennaChoice);
 }
 
@@ -179,6 +183,7 @@ static itsdk_console_return_e _itsdk_murawan_consolePriv(char * buffer, uint8_t 
 			  _itsdk_console_printf("MC:2:XX    : murawan.ackRetry (HEXA) - ackDuty repeat\r\n");
 			  _itsdk_console_printf("MC:3:XX    : murawan.sleepDuty (HEXA) - sendDuy repeat\r\n");
 			  _itsdk_console_printf("MC:4:n     : murawan.antennaChoice 0 PIFA / 1 PCB\r\n");
+			  _itsdk_console_printf("MC:5:XX    : murawan.batDuty (HEXA) / %d m\r\n",MURAWAN_CONFIG_BATDUTY_TIME_BASE_M);
 			#endif
 		  return ITSDK_CONSOLE_SUCCES;
 		  break;
@@ -239,6 +244,16 @@ static itsdk_console_return_e _itsdk_murawan_consolePriv(char * buffer, uint8_t 
 				_itsdk_console_printf("KO\r\n");
 				return ITSDK_CONSOLE_FAILED;
 				break;
+
+			case '5':
+				// murawan.batDuty
+				if ( sz >= 7 ) {
+					itsdk_config_shadow.app.batDuty = itdt_convertHexChar2Int(&buffer[5]);
+				}
+				_itsdk_console_printf("OK\r\n");
+				return ITSDK_CONSOLE_SUCCES;
+				break;
+
 			default:
 				break;
 			}
