@@ -165,7 +165,7 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
 
 		murawan_state.lastMeasure.humidity = (murawan_state.lastHumidity/1000);
 		murawan_state.lastMeasure.temp = (murawan_state.lastTemp/10);
-		murawan_state.lastMeasure.pressure = (murawan_state.lastPressure);
+		murawan_state.lastMeasure.pressure = (uint16_t)(murawan_state.lastPressure/100);
 		murawan_state.lastMeasure.light = (murawan_state.lastMLux/1000);
 		nfcStore_pushDataEntry(&murawan_state.lastMeasure);
 

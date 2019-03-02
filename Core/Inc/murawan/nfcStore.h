@@ -46,7 +46,7 @@ typedef struct {
 
 typedef struct {
   int16_t	temp;		// 1 block		- in c°C
-  uint16_t	pressure;	//				- in Pa
+  uint16_t	pressure;	//				- in hPa
   uint16_t	light;		// 2 block 		- in Lux
   uint16_t	humidity;	//				- in %age
   uint8_t	vcell1;		// 3 block		- in 0.1V
