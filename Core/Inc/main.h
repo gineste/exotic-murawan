@@ -83,8 +83,6 @@ void Error_Handler(void);
 #define RADIO_NSS_GPIO_Port GPIOA
 #define RADIO_SCLK_Pin GPIO_PIN_3
 #define RADIO_SCLK_GPIO_Port GPIOB
-#define ST25DV_INT_Pin GPIO_PIN_5
-#define ST25DV_INT_GPIO_Port GPIOB
 #define RADIO_TCXO_VCC_Pin GPIO_PIN_12
 #define RADIO_TCXO_VCC_GPIO_Port GPIOA
 #define RADIO_DIO_0_Pin GPIO_PIN_4

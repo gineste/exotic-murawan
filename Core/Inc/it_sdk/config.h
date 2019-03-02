@@ -144,8 +144,9 @@
 #define ITSDK_LOWPOWER_GPIO_B_WAKE	(  __LP_GPIO_0 \
 									 | __LP_GPIO_1 \
 									 | __LP_GPIO_4 \
+									 | __LP_GPIO_5 \
 									)										// During Low Power mode, the GPIO bank B can be used for wakeup
-																			// SX1276 GPIO 0 & 1 & 2
+																			// SX1276 GPIO 0 & 1 & 2 + ST25DV
 
 #define ITSDK_LOWPOWER_GPIO_C_WAKE	( __LP_GPIO_13 \
 									)										// During Low Power mode, the GPIO bank C can be used for wakeup

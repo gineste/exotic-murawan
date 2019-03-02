@@ -29,6 +29,7 @@
 #include <it_sdk/console/console.h>
 #include <murawan/radio.h>
 #include <murawan/machine.h>
+#include <drivers/gauge/max17205/max17205.h>
 
 #if ITSDK_WITH_CONSOLE == __ENABLE
   #include <it_sdk/console/console.h>
@@ -80,8 +81,21 @@ void murawan_setup() {
 	murawan_state.lastvBatmV = 0;
 	murawan_state.lastCurrent = 0;
 	murawan_state.lastCoulomb = 0;
-	//
-
+	// init vbat values values
+	switch ( drivers_max17205_isReady() ) {
+	case MAX17205_SUCCESS:
+		drivers_max17205_getVoltage(MAX17205_CELL3,&murawan_state.lastCell3mV);
+		drivers_max17205_getVoltage(MAX17205_CELL2,&murawan_state.lastCell2mV);
+		drivers_max17205_getVoltage(MAX17205_CELL1,&murawan_state.lastCell1mV);
+	case MAX17205_UNDERVOLT:
+		drivers_max17205_getVoltage(MAX17205_VBAT,&murawan_state.lastvBatmV);
+	default:
+		break;
+	}
+	murawan_state.lastMeasure.vbat = murawan_state.lastvBatmV / 100;
+	murawan_state.lastMeasure.vcell1 = murawan_state.lastCell1mV / 100;
+	murawan_state.lastMeasure.vcell2 = murawan_state.lastCell2mV / 100;
+	murawan_state.lastMeasure.vcell3 = murawan_state.lastCell3mV / 100;
 }
 
 // PRINT STATE

@@ -31,6 +31,7 @@
 #include <it_sdk/itsdk.h>
 #include <it_sdk/statemachine/statemachine.h>
 #include <murawan/machine.h>
+#include <murawan/nfcStore.h>
 
 #define MURAWAN_ST_SETUP 		0
 #define MURAWAN_ST_WAIT4CONF 	1
@@ -73,6 +74,8 @@ typedef struct {
 	uint16_t	lastvBatmV;					// Last VBat read
 	uint16_t	lastCoulomb;				// Last Coulomb Value in C
 	int32_t		lastCurrent;				// Last current measured in uA
+
+	nfcStore_data_entry_t lastMeasure;
 
 } murawan_state_t;
 

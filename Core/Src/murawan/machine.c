@@ -26,7 +26,7 @@
 #include <drivers/nfc/st25dv/st25dv.h>
 #include <drivers/gauge/max17205/max17205.h>
 #include <it_sdk/lorawan/cayenne.h>
-
+#include <murawan/nfcStore.h>
 #include <murawan/machine.h>
 
 machine_t murawan_stm = {
@@ -68,7 +68,6 @@ void murawan_stm_updateTiming() {
 uint16_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
 	log_info("In Setup %d,%d\r\n",cLoop,tLoop);
 
-	murawan_setup();
 
 	static itsdk_lorawan_channelInit_t channels= ITSDK_LORAWAN_CHANNEL;
 	#ifdef ITSDK_LORAWAN_CHANNEL
@@ -99,6 +98,19 @@ uint16_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t 
 	if (drivers_st25dv_setup(ST25DV_MODE_DEFAULT) != ST25DV_SUCCESS ) {
 		ITSDK_ERROR_REPORT(APP_ERROR_ST25DV_FAULT,0);
 	}
+	nfcStore_setup();
+
+//	uint8_t messages[16] = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 };
+//	while ( true ) {
+//		drivers_st25dv_goWakeUp();
+//		drivers_st25dv_ftmWrite(messages,16);
+//		drivers_st25dv_goLowPower();
+//	    wdg_refresh();
+//		itsdk_delayMs(4000);
+//	}
+
+	// Setup the state
+	murawan_setup();
 
 
 	// Check is the device has been initialized of if still factory default (should be 00,00,00...)
@@ -151,6 +163,12 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
 			ITSDK_ERROR_REPORT(APP_ERROR_MAX44009_FAULT,0);
 		}
 
+		murawan_state.lastMeasure.humidity = (murawan_state.lastHumidity/1000);
+		murawan_state.lastMeasure.temp = (murawan_state.lastTemp/10);
+		murawan_state.lastMeasure.pressure = (murawan_state.lastPressure);
+		murawan_state.lastMeasure.light = (murawan_state.lastMLux/1000);
+		nfcStore_pushDataEntry(&murawan_state.lastMeasure);
+
 		if ( murawan_state.connection == MURAWAN_CONNEXION_JOINED )
 		   return ( MURAWAN_ST_SEND | STATE_IMMEDIATE_JUMP);
 	}
@@ -165,10 +183,14 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
 			drivers_max17205_getVoltage(MAX17205_CELL1,&murawan_state.lastCell1mV);
 			drivers_max17205_getCoulomb(&murawan_state.lastCoulomb);					// no break, normal
 			murawan_state.lastCoulomb = 0xFFFF - murawan_state.lastCoulomb;				// because coulomb decreases when current going out of battery
+			murawan_state.lastMeasure.vcell1 = murawan_state.lastCell1mV / 100;
+			murawan_state.lastMeasure.vcell2 = murawan_state.lastCell2mV / 100;
+			murawan_state.lastMeasure.vcell3 = murawan_state.lastCell3mV / 100;
 		case MAX17205_UNDERVOLT:
 			drivers_max17205_getVoltage(MAX17205_VBAT,&murawan_state.lastvBatmV);
 			drivers_max17205_getCurrent(&murawan_state.lastCurrent);
 			murawan_state.lastCurrent = -murawan_state.lastCurrent;						// because current is negative when going out of battery
+			murawan_state.lastMeasure.vbat = murawan_state.lastvBatmV / 100;
 			return ( MURAWAN_ST_SENDBAT | STATE_IMMEDIATE_JUMP);
 			break;
 		default:
