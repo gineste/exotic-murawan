@@ -43,7 +43,7 @@ nfcStore_return_e nfcStore_setup() {
 		ITSDK_ERROR_REPORT(APP_ERROR_NFCSTORE_RDFAIL,0);
 		ret = NFCSTORE_FAILED;
 	} else {
-		if ( head.magic != NFCSTORE_DATA_MAGIC ) {
+		if ( head.magic != NFCSTORE_DATA_MAGIC || head.storeSize != NFCSTORE_AVAILABLE_ENTRIES || head.entrySize != NFCSTORE_DATA_ENTRY_SIZE) {
 			// need to init the nfcStore
 			head.magic = NFCSTORE_DATA_MAGIC;
 			head.entriesStored = 0;

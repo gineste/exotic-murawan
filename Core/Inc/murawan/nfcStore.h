@@ -32,7 +32,7 @@
 
 #define NFCSTORE_DATA_MAGIC			0x4449534B
 #define NFCSTORE_DATA_ENTRY_SIZE	3															    // size of the entry in block of 32b
-#define NFCSTORE_AVAILABLE_ENTRIES	((ITSDK_DRIVERS_ST25DV_USER_Z1_SIZE / NFCSTORE_DATA_ENTRY_SIZE) -1)  // Number of block we can store in the Zone 1
+#define NFCSTORE_AVAILABLE_ENTRIES	((ITSDK_DRIVERS_ST25DV_USER_Z1_SIZE / (4*NFCSTORE_DATA_ENTRY_SIZE)) -1)  // Number of block we can store in the Zone 1
 
 // The block Header is on block starting a offset of the USER1 zone
 // The first entry block will be at entrySize*blockId
