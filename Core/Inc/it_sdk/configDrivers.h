@@ -101,6 +101,8 @@
 // NFC Tag : ST25DV
 
 #define ITSDK_DRIVERS_ST25DV					__ENABLE
+#define ITSDK_DRIVERS_ST25DV_WITH_SERIALUZ		__ENABLE					// Activate the serial User communication code
+
 #if ITSDK_DRIVERS_ST25DV == __ENABLE
 	#ifndef __I2C_INCLUDED
 	  #define __I2C_INCLUDED
@@ -121,10 +123,10 @@
 																			// for the rest of the memory area an extended read is needed.
 																			// For a larger reader compatibility, I assume it is better to have
 																			//  the Zone 1 & Zone 2 under this 1KB limit.
-#define ITSDK_DRIVERS_ST25DV_USER_Z1_SIZE		512							// Size in byte for User Zone 1 - This zone have no security option
+#define ITSDK_DRIVERS_ST25DV_USER_Z1_SIZE		128							// Size in byte for User Zone 1 - This zone have no security option
 #define ITSDK_DRIVERS_ST25DV_USER_Z1_ACCESS		_ST25DV_ACCESS_RO_OPEN		// Zone 1 is read only
 
-#define ITSDK_DRIVERS_ST25DV_USER_Z2_SIZE		512							// Size in byte for User Zone 2
+#define ITSDK_DRIVERS_ST25DV_USER_Z2_SIZE		128							// Size in byte for User Zone 2
 #define ITSDK_DRIVERS_ST25DV_USER_Z2_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z2_ACCESS		_ST25DV_ACCESS_RO_OPEN		// Zone 2 is read only
 
@@ -132,9 +134,10 @@
 #define ITSDK_DRIVERS_ST25DV_USER_Z3_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z3_ACCESS		_ST25DV_ACCESS_RW_RWSECURED	// Zone 3 is RW both secured by a password
 
-#define ITSDK_DRIVERS_ST25DV_USER_Z4_SIZE		3072						// The reality is Zone 4 is up the memory size.
+#define ITSDK_DRIVERS_ST25DV_USER_Z4_SIZE		3840						// The reality is Zone 4 is up the memory size.
 #define ITSDK_DRIVERS_ST25DV_USER_Z4_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z4_ACCESS		_ST25DV_ACCESS_RW_RWSECURED	// Zone 4 is RW both secured by a password
 
+#define ITSDK_DRIVERS_ST25DV_SERIALUZ_ZONE		ST25DV_USERZONE_2			// The serial communication module on User Zone is using Zone 2
 
 #endif /* INC_IT_SDK_CONFIGDRIVERS_H_ */

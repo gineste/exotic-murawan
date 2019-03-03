@@ -192,7 +192,7 @@
 #define ITSDK_SECSTORE_CONSOLEKEY   "changeme"								// Default console passwd string (max 15 char)
 
 #define ITSDK_WITH_CONSOLE			__ENABLE								// Enable / Disable the Console feature
-#define ITSDK_CONSOLE_SERIAL		__UART_USART2							// Serial port to be used for console
+#define ITSDK_CONSOLE_SERIAL		__UART_CUSTOM							// Serial port to be used for console
 #define ITSDK_CONSOLE_LINEBUFFER	40										// Max Size of a line in the console. Dropped after.
 #define ITSDK_CONSOLE_EXPIRE_S		300										// After 300 Seconds the console will lock automatically
 #define ITSKD_CONSOLE_COPYRIGHT		"(c) 2019 Exotic Systems - MuraWAN\r\n"	// copyright string

@@ -95,7 +95,7 @@ uint16_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t 
 	}
 
 	// setup NFC
-	if (drivers_st25dv_setup(ST25DV_MODE_DEFAULT) != ST25DV_SUCCESS ) {
+	if (drivers_st25dv_setup(ST25DV_MODE_SERIALUZ) != ST25DV_SUCCESS ) {
 		ITSDK_ERROR_REPORT(APP_ERROR_ST25DV_FAULT,0);
 	}
 	nfcStore_setup();
