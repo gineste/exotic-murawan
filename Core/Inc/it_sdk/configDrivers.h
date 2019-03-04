@@ -94,7 +94,7 @@
 #endif
 #define ITSDK_DRIVERS_MAX17205_I2C				hi2c1						// I2C port to be used for communications
 #define ITSDK_DRIVERS_MAX17205_ALRT1_BANK		__BANK_B					// ALERT PIN Configuration
-#define ITSDK_DRIVERS_MAX17205_ALRT1_PIN		__LP_GPIO_7					//   __LP_GPIO_NONE if not used
+#define ITSDK_DRIVERS_MAX17205_ALRT1_PIN		__LP_GPIO_NONE				//   __LP_GPIO_NONE if not used (__LP_GPIO_7)
 #define ITSDK_DRIVERS_MAX17205_RSENSE_MOHM		1000						// RSense in mOhm
 
 // ------------------------------------------------------------------------
@@ -123,10 +123,10 @@
 																			// for the rest of the memory area an extended read is needed.
 																			// For a larger reader compatibility, I assume it is better to have
 																			//  the Zone 1 & Zone 2 under this 1KB limit.
-#define ITSDK_DRIVERS_ST25DV_USER_Z1_SIZE		128							// Size in byte for User Zone 1 - This zone have no security option
-#define ITSDK_DRIVERS_ST25DV_USER_Z1_ACCESS		_ST25DV_ACCESS_RO_OPEN		// Zone 1 is read only
+#define ITSDK_DRIVERS_ST25DV_USER_Z1_SIZE		256							// Size in byte for User Zone 1 - This zone have no security option
+#define ITSDK_DRIVERS_ST25DV_USER_Z1_ACCESS		_ST25DV_ACCESS_RW_OPEN		// Zone 1 is read only
 
-#define ITSDK_DRIVERS_ST25DV_USER_Z2_SIZE		128							// Size in byte for User Zone 2
+#define ITSDK_DRIVERS_ST25DV_USER_Z2_SIZE		768							// Size in byte for User Zone 2
 #define ITSDK_DRIVERS_ST25DV_USER_Z2_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z2_ACCESS		_ST25DV_ACCESS_RO_OPEN		// Zone 2 is read only
 
@@ -134,10 +134,11 @@
 #define ITSDK_DRIVERS_ST25DV_USER_Z3_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z3_ACCESS		_ST25DV_ACCESS_RW_RWSECURED	// Zone 3 is RW both secured by a password
 
-#define ITSDK_DRIVERS_ST25DV_USER_Z4_SIZE		3840						// The reality is Zone 4 is up the memory size.
+#define ITSDK_DRIVERS_ST25DV_USER_Z4_SIZE		3072						// The reality is Zone 4 is up the memory size.
 #define ITSDK_DRIVERS_ST25DV_USER_Z4_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z4_ACCESS		_ST25DV_ACCESS_RW_RWSECURED	// Zone 4 is RW both secured by a password
 
-#define ITSDK_DRIVERS_ST25DV_SERIALUZ_ZONE		ST25DV_USERZONE_2			// The serial communication module on User Zone is using Zone 2
+#define ITSDK_DRIVERS_ST25DV_SERIALUZ_ZONE		ST25DV_USERZONE_1			// The serial communication module on User Zone is using Zone 2
+#define ITSDK_DRIVERS_ST25DV_SERIALUZ_OFFSET	32							// offset in block (x32b) in the USER Zone 32 = 128
 
 #endif /* INC_IT_SDK_CONFIGDRIVERS_H_ */

@@ -63,6 +63,7 @@ void project_setup() {
  * LowPower loop
  */
 void project_loop() {
+	st25dv_process();
 	itsdk_lorawan_loop();
 }
 

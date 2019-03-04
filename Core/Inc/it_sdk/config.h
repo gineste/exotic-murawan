@@ -46,7 +46,7 @@
 #define ITSDK_WITH_DRIVERS			__ENABLE								// Includes configDrivers.h
 #define ITSDK_RAM_SIZE				(20*1024)								// RAM Memory size
 #define ITSDK_EPROM_SIZE			(6*1024)								// EEPROM size
-#define ITSDK_WITH_UART				( __UART_USART2 | __UART_LPUART1 )		// Use LPUART1 and USART2 for debug
+#define ITSDK_WITH_UART				( /*__UART_USART2 |*/ __UART_LPUART1 )	// Use LPUART1 and USART2 for debug
 #define ITSDK_WITH_RTC				__RTC_ENABLED							// The Rtc is usd in the firmware
 #define ITSDK_WITH_CLK_ADJUST		__ENABLE								// The RTC (and wtachdog) is calibrated
 #define ITSDK_RTC_CLKFREQ			32768									// RTC clock source frequency
@@ -94,13 +94,13 @@
 									| __LOWPWR_MODE_WAKE_RTC   \
 									| __LOWPWR_MODE_WAKE_GPIO  \
 									/*| __LOWPWR_MODE_WAKE_LPUART */\
-									| __LOWPWR_MODE_WAKE_UART2 \
+									/*| __LOWPWR_MODE_WAKE_UART2 */\
 									)										// Mode Stop + wakeup RTC + GPIO
 #define ITSDK_LOWPOWER_MINDUR_MS	5										// Under 5 ms sleep request, no need to sleep
 #define ITSDK_LOWPOWER_RTC_MS		4000									// RTC wake up after 500ms
 #define ITSDK_LOWPOWER_GPIO_A_KEEP	(  __LP_GPIO_1  \
-									 | __LP_GPIO_2  \
-									 | __LP_GPIO_3  \
+								/*	 | __LP_GPIO_2 */ \
+								/*	 | __LP_GPIO_3 */ \
 									 | __LP_GPIO_4	\
 									 | __LP_GPIO_5	\
 									 | __LP_GPIO_6	\
@@ -109,7 +109,7 @@
 									 | __LP_GPIO_13	\
 									 | __LP_GPIO_14	\
 									 | __LP_GPIO_15	\
-		                            )										// Keep activ (led 2, lpuart, radio, spi1, sx1276 GPIO4)
+		                            )										// Keep activ (led 2, lpuart, radio, spi1, sx1276 GPIO4) removed uart2
 #define ITSDK_LOWPOWER_GPIO_B_KEEP	(  __LP_GPIO_0 \
 								     | __LP_GPIO_1 \
 									 | __LP_GPIO_2 \
