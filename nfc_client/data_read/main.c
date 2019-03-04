@@ -128,6 +128,7 @@ int main(int argc,char* argv[])
 	    	uint8_t rlen=0;
 	    	unsigned char rBuffer[64];
 	    	uint8_t countError = 0;
+
 	    	while (1) {
 		    	sleep(1);
 		    	uint8_t ret;
@@ -177,7 +178,7 @@ int main(int argc,char* argv[])
 			    	  	blockId--;
 		    	  	} else {
 		    	  		countError++;
-		    	  		if ( countError < 4 ) {
+		    	  		if ( countError < 10 ) {
 		    	  			sleep(1);
 		    	  			i--;
 		    	  			continue;
@@ -199,7 +200,7 @@ int main(int argc,char* argv[])
 		    	}
 		    }
 	    }
-	    sleep(10);
+	    sleep(20);
 
 	} while (1);	
     fw_exit(icdev);
