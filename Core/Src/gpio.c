@@ -40,7 +40,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "gpio.h"
 /* USER CODE BEGIN 0 */
-
+#include <murawan/radio.h>
+#include <it_sdk/eeprom/sdk_config.h>
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -107,9 +108,9 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(RADIO_DIO_3_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PA10 PA11 PA0 PA4 
-                           PA5 */
+                           PA2 PA5 PA3 */
   GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_0|GPIO_PIN_4 
-                          |GPIO_PIN_5;
+                          |GPIO_PIN_2|GPIO_PIN_5|GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -151,7 +152,7 @@ void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 2 */
 void stm32l_lowPowerRestoreGpioConfig() {
-	  //GPIO_InitTypeDef GPIO_InitStruct = {0};
+	  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
 	 /* GPIO Ports Clock Enable */
 	  __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -159,6 +160,44 @@ void stm32l_lowPowerRestoreGpioConfig() {
 	  __HAL_RCC_GPIOC_CLK_ENABLE();
 	  __HAL_RCC_GPIOH_CLK_ENABLE();
 
+	  /*Configure GPIO pins : PB5 PBPin PBPin PBPin */
+	  GPIO_InitStruct.Pin = RADIO_DIO_0_Pin|RADIO_DIO_1_Pin|RADIO_DIO_2_Pin;
+	  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	  /*Configure GPIO pin : PtPin */
+	  GPIO_InitStruct.Pin = RADIO_DIO_3_Pin;
+	  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  HAL_GPIO_Init(RADIO_DIO_3_GPIO_Port, &GPIO_InitStruct);
+
+	  /*Configure GPIO pins : PA10 PA11 PA0 PA4
+	                           PA2 PA5 PA3 */
+	  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_0|GPIO_PIN_4
+	                          |GPIO_PIN_2|GPIO_PIN_5|GPIO_PIN_3;
+	  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	  /*Configure GPIO pins : PBPin PBPin */
+	  GPIO_InitStruct.Pin = GAUGE_ALERT_Pin|MAX44009_INT_Pin;
+	  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	  /*Configure GPIO pins : PAPin PAPin */
+	  GPIO_InitStruct.Pin = RFSW_A_Pin|RFSW_B_Pin;
+	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	  /*Configure GPIO pins : PB11 PB10 */
+	  GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_10;
+	  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 	  /* EXTI interrupt init*/
 	  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
@@ -166,6 +205,14 @@ void stm32l_lowPowerRestoreGpioConfig() {
 
 	  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
 	  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+
+
+	  if ( itsdk_config.app.antennaChoice == MURAWAN_ANTENNA_PIFA ){
+		murawan_antenna_selectPifa();
+	  } else {
+		murawan_antenna_selectPCB();
+	  }
+
 }
 /* USER CODE END 2 */
 

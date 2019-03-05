@@ -98,57 +98,70 @@
 									)										// Mode Stop + wakeup RTC + GPIO
 #define ITSDK_LOWPOWER_MINDUR_MS	5										// Under 5 ms sleep request, no need to sleep
 #define ITSDK_LOWPOWER_RTC_MS		4000									// RTC wake up after 500ms
-#define ITSDK_LOWPOWER_GPIO_A_KEEP	(  __LP_GPIO_1  \
-								/*	 | __LP_GPIO_2 */ \
-								/*	 | __LP_GPIO_3 */ \
-									 | __LP_GPIO_4	\
-									 | __LP_GPIO_5	\
-									 | __LP_GPIO_6	\
-									 | __LP_GPIO_7	\
-									 | __LP_GPIO_12	\
-									 | __LP_GPIO_13	\
-									 | __LP_GPIO_14	\
-									 | __LP_GPIO_15	\
+#define ITSDK_LOWPOWER_MISC_HALT    (  __LP_HALT_NONE					\
+									 | __LP_HALT_I2C1					\
+								/*	 | __LP_HALT_I2C2	*/				\
+									 | __LP_HALT_SPI1					\
+									 | __LP_HALT_SPI2					\
+									)										// extra module to stop during low power phase
+#define ITSDK_LOWPOWER_GPIO_A_KEEP	(  __LP_GPIO_1     /* LoRa RF Sw */ \
+								/*	 | __LP_GPIO_2 */  /* nc uart2 */ 	\
+								/*	 | __LP_GPIO_3 */  /* nc uart2 */ 	\
+								/*	 | __LP_GPIO_4 */  /* not used */	\
+								/*	 | __LP_GPIO_5 */  /* not used */	\
+								/*	 | __LP_GPIO_6 */  /* spi1 */		\
+								/*	 | __LP_GPIO_7 */  /* spi1 */		\
+								/*	 | __LP_GPIO_8 */  /* ant switch */	\
+								/*	 | __LP_GPIO_9 */  /* ant switch */	\
+									 | __LP_GPIO_12	   /* LoRa Tcxo */	\
+								/*	 | __LP_GPIO_13 */ /* lpuart */		\
+								/*	 | __LP_GPIO_14	*/ /* lpuart */		\
+									 | __LP_GPIO_15	   /* LoRa Nss */	\
 		                            )										// Keep activ (led 2, lpuart, radio, spi1, sx1276 GPIO4) removed uart2
-#define ITSDK_LOWPOWER_GPIO_B_KEEP	(  __LP_GPIO_0 \
-								     | __LP_GPIO_1 \
-									 | __LP_GPIO_2 \
-									 | __LP_GPIO_3 \
-									 | __LP_GPIO_4 \
-									 | __LP_GPIO_5 \
-									 | __LP_GPIO_6 \
-									 | __LP_GPIO_7 \
-									 | __LP_GPIO_8 \
-									 | __LP_GPIO_9 \
-									 | __LP_GPIO_12 \
-									 | __LP_GPIO_13 \
-									 | __LP_GPIO_14 \
+#define ITSDK_LOWPOWER_GPIO_B_KEEP	(  __LP_GPIO_NONE 						\
+								/*     __LP_GPIO_0 */   /* LoRa Dio2 */ 	\
+								/*   | __LP_GPIO_1 */ 	/* LoRa Dio1 */ 	\
+								/*	 | __LP_GPIO_2 */	/* Max44009 int */  \
+								/*	 | __LP_GPIO_3 */   /* spi1 */ 			\
+								/*	 | __LP_GPIO_4 */	/* LoRa Dio0 */ 	\
+									 | __LP_GPIO_5 		/* st25dv int */ 	\
+									 | __LP_GPIO_6		/* st25dv LPD */ 	\
+								/*	 | __LP_GPIO_7 */	/* max17205 alert*/ \
+								/*	 | __LP_GPIO_8 */	/* i2c */			\
+								/*	 | __LP_GPIO_9 */	/* i2c */ 			\
+								/*	 | __LP_GPIO_12*/ 	/* spi2 */			\
+								/*	 | __LP_GPIO_13*/	/* spi2 */			\
+								/*	 | __LP_GPIO_14*/	/* spi2 */		    \
+								/*	 | __LP_GPIO_15*/	/* spi2 */			\
 									)										// Keep activ (led 1,3,4), i2c,radio, button, spi2, sx1276 GPIO 0,1,2
-#define ITSDK_LOWPOWER_GPIO_C_KEEP	(   __LP_GPIO_0 \
-									  | __LP_GPIO_1 \
-									  | __LP_GPIO_2 \
-									  | __LP_GPIO_13 \
-									  | __LP_GPIO_14 \
-									  | __LP_GPIO_15 \
+#define ITSDK_LOWPOWER_GPIO_C_KEEP	(   __LP_GPIO_NONE						\
+								      | __LP_GPIO_0 	/* LoRa Reset */	\
+									  | __LP_GPIO_1 	/* LoRa TxBoost*/	\
+									  | __LP_GPIO_2 	/* LoRa Radiosw*/	\
+								/*	  | __LP_GPIO_13 */ /* LoRa Dio3*/	    \
+								/*	  | __LP_GPIO_14 */ /* nc */			\
+								/*	  | __LP_GPIO_15 */ /* nc */			\
 									)										// keep radio
 #define ITSDK_LOWPOWER_GPIO_D_KEEP	(__LP_GPIO_NONE)						// During Low Power mode, the GPIO bank D are all off (not implemented yet)
 #define ITSDK_LOWPOWER_GPIO_E_KEEP	(__LP_GPIO_NONE)						// During Low Power mode, the GPIO bank E are all off (not implemented yet)
 #define ITSDK_LOWPOWER_GPIO_H_KEEP	(__LP_GPIO_NONE)						// During Low Power mode, the GPIO bank H are all off (not implemented yet)
 
 																			// GPIO Wake-Up => the pin should also be in the _KEEP list
-#define ITSDK_LOWPOWER_GPIO_A_WAKE	(  /*__LP_GPIO_NONE */\
-									 | __LP_GPIO_2 \
-									 | __LP_GPIO_3 \
+#define ITSDK_LOWPOWER_GPIO_A_WAKE	(  __LP_GPIO_NONE 	\
+								/*	 | __LP_GPIO_2 */	\
+								/*	 | __LP_GPIO_3 */ 	\
 									)										// During Low Power mode, the GPIO bank A can be used for wakeup
 																			// LPUART_RX
-#define ITSDK_LOWPOWER_GPIO_B_WAKE	(  __LP_GPIO_0 \
-									 | __LP_GPIO_1 \
-									 | __LP_GPIO_4 \
+#define ITSDK_LOWPOWER_GPIO_B_WAKE	(  __LP_GPIO_NONE   \
+								/*     __LP_GPIO_0 */   \
+								/*	 | __LP_GPIO_1 */	\
+								/*	 | __LP_GPIO_4 */	\
 									 | __LP_GPIO_5 \
 									)										// During Low Power mode, the GPIO bank B can be used for wakeup
 																			// SX1276 GPIO 0 & 1 & 2 + ST25DV
 
-#define ITSDK_LOWPOWER_GPIO_C_WAKE	( __LP_GPIO_13 \
+#define ITSDK_LOWPOWER_GPIO_C_WAKE	(  __LP_GPIO_NONE    \
+		                        /*   | __LP_GPIO_13 */	 \
 									)										// During Low Power mode, the GPIO bank C can be used for wakeup
 																			// SX1276 GPIO 3
 #define ITSDK_LOWPOWER_GPIO_D_WAKE	(__LP_GPIO_NONE)						// During Low Power mode, the GPIO bank D can be used for wakeup
