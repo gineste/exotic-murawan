@@ -5,10 +5,10 @@
 #include <string.h>
 #include <ctype.h>
 
-#define HEADAD	0x20
+#define HEADAD	42
 #define HEADSZ	1
 #define HEADSZb	4
-#define DATAAD	0x21
+#define DATAAD	43
 #define BUFSZ	84
 
 /**

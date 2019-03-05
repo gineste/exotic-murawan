@@ -139,6 +139,6 @@
 #define ITSDK_DRIVERS_ST25DV_USER_Z4_ACCESS		_ST25DV_ACCESS_RW_RWSECURED	// Zone 4 is RW both secured by a password
 
 #define ITSDK_DRIVERS_ST25DV_SERIALUZ_ZONE		ST25DV_USERZONE_1			// The serial communication module on User Zone is using Zone 2
-#define ITSDK_DRIVERS_ST25DV_SERIALUZ_OFFSET	32							// offset in block (x32b) in the USER Zone 32 = 128
+#define ITSDK_DRIVERS_ST25DV_SERIALUZ_OFFSET	42							// offset in block (x32b) in the USER Zone 42 = 168
 
 #endif /* INC_IT_SDK_CONFIGDRIVERS_H_ */
