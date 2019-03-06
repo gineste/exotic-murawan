@@ -55,7 +55,7 @@ void task() {
  */
 void project_setup() {
 	log_info("Booting !!\r\n");
-
+	murawan_state.lastResetCause = itsdk_getResetCause();
 	itdt_sched_registerSched(MURAWAN_CONFIG_TIME_BASE_S*1000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
 }
 

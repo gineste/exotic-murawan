@@ -37,13 +37,14 @@ machine_t murawan_stm = {
     &murawan_stm_updateTiming,	// Update age each time the machine is running - on each cycles.
     {
       //       UID                RESET       PROCE      			 P0      		Name:XXXXXXX
-        { MURAWAN_ST_SETUP, 	  NULL,	    &murawan_stm_stSetup,    NULL,   			"Setup"  },
-        { MURAWAN_ST_WAIT4CONF,   NULL,     &murawan_stm_stWaitC,    NULL,   			"Wait"   },
-        { MURAWAN_ST_RUN, 	 	  NULL,     &murawan_stm_stRun,   	 NULL,   			"Run"    },
-        { MURAWAN_ST_SEND, 	 	  NULL,     &murawan_stm_stSend,   	 FRAME_SENSOR,	   	"SendS"  },
-        { MURAWAN_ST_SENDBAT,  	  NULL,     &murawan_stm_stSend,   	 FRAME_BAT,   		"SendB"  },
-        { MURAWAN_ST_JOIN, 	 	  NULL,     &murawan_stm_stJoin,   	 NULL,   			"Join"   },
-        { STATE_LAST,	 		  NULL,     NULL,  					 NULL,      		"Error"  }
+        { MURAWAN_ST_SETUP, 	  NULL,	    &murawan_stm_stSetup,    NULL,   			"Setup"    },
+        { MURAWAN_ST_WAIT4CONF,   NULL,     &murawan_stm_stWaitC,    NULL,   			"Wait"     },
+        { MURAWAN_ST_RUN, 	 	  NULL,     &murawan_stm_stRun,   	 NULL,   			"Run"      },
+        { MURAWAN_ST_SEND, 	 	  NULL,     &murawan_stm_stSend,   	 FRAME_SENSOR,	   	"SendS"    },
+        { MURAWAN_ST_SENDBAT,  	  NULL,     &murawan_stm_stSend,   	 FRAME_BAT,   		"SendBAT"  },
+        { MURAWAN_ST_SENDBOOT, 	  NULL,     &murawan_stm_stSend,   	 FRAME_BOOT,   		"SendBOOT" },
+        { MURAWAN_ST_JOIN, 	 	  NULL,     &murawan_stm_stJoin,   	 NULL,   			"Join"     },
+        { STATE_LAST,	 		  NULL,     NULL,  					 NULL,      		"Error"    }
 
     }
 };
@@ -147,13 +148,22 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
 
 
 	if ( murawan_state.connection != MURAWAN_CONNEXION_JOINED ) {
-  	   // open for discussion, it is immediate or non ?
+  	   // open for discussion, it is immediate or not ?
 	   return MURAWAN_ST_JOIN;
 	}
 
+	// Send the reboot frame
+	if ( murawan_state.bootFrameSent == 0 && murawan_state.lastTimeUpdateMs > (1000*MURAWAN_CONFIG_BOOTFRM_S)) {
+		murawan_state.bootFrameSent = 1;
+		drivers_max17205_getVoltage(MAX17205_VBAT,&murawan_state.lastvBatmV);
+		drivers_bme280_getSensors(&murawan_state.lastTemp,&murawan_state.lastPressure,&murawan_state.lastHumidity);
+		return ( MURAWAN_ST_SENDBOOT | STATE_IMMEDIATE_JUMP);
+	}
+
+
 	// Get values when sendDuty time has been reached
 	if ( itsdk_config.app.sendDuty > 0 && murawan_state.lastMeasureS >= itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S ) {
-		log_info("time is %d\r\n",(uint32_t)itsdk_time_get_ms());
+		log_info("T%d\r\n",(uint32_t)itsdk_time_get_ms());
 
 		murawan_state.lastMeasureS = 0;
 		if ( drivers_bme280_getSensors(&murawan_state.lastTemp,&murawan_state.lastPressure,&murawan_state.lastHumidity) != BME280_SUCCESS ) {
@@ -209,8 +219,36 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
  * Downlink Management
  */
 void proceed_downlink(uint8_t rPort, uint8_t rSize,uint8_t * rData) {
-	log_info("Receiving data\r\n");
-
+	// Rq: when we have downlink pending the config frame will be canceled: the next one will be taken instead.
+	//
+	// +------+------------+----------+---------+----------+-----------+---------+---------------+
+	// | 0xA5 | SetupFlags | sendDuty | ackDuty | ackRetry | sleepDuty | batDuty | antennaChoice |
+	// +------+------------+----------+---------+----------+-----------+---------+---------------+
+	// Setup Flags field:
+	//  1 - Reset					0x10 - Update ackRetry
+	//  2 - Factory defaults		0x20 - Update sleepDuty
+	//  4 - Update sendDuty			0x40 - Update batDuty
+	//  8 - Update ackDuty			0x80 - Update antenna Choice
+	ITSDK_ERROR_REPORT(APP_ERROR_MURAWAN_DOWNLINK,0);
+	if ( rPort == 0 && rSize == 8 && rData[0] == 0xA5 ) {
+		uint8_t flag = rData[1];
+		if ( flag & 0x1 ) itsdk_reset();
+		if ( flag & 0x2 ) {
+			itsdk_config_resetToFactory();
+		} else {
+			if ( flag & 0x04 ) itsdk_config.app.sendDuty = rData[2];
+			if ( flag & 0x08 ) itsdk_config.app.ackDuty = rData[3];
+			if ( flag & 0x10 ) itsdk_config.app.ackRetry = rData[4];
+			if ( flag & 0x20 ) itsdk_config.app.sleepDuty = rData[5];
+			if ( flag & 0x40 ) itsdk_config.app.batDuty = rData[6];
+			if ( flag & 0x80 ) itsdk_config.app.antennaChoice = ( rData[7] & 0x1 );
+			if ( (flag & 0xFC) != 0 ) {
+				itsdk_config_flushConfig();
+			}
+		}
+	} else {
+		ITSDK_ERROR_REPORT(APP_ERROR_MURAWAN_INVDLNK,0);
+	}
 }
 
 /**
@@ -224,8 +262,16 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 	uint8_t sPort=1;
 	itsdk_cayenne_data_u cayenne;
 
-	if ( p == FRAME_SENSOR ) {
+	itsdk_lorawan_sendconf_t ack = LORAWAN_SEND_UNCONFIRMED;
+	if ( murawan_state.lastAckTestS > itsdk_config.app.ackDuty*itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S) {
+		murawan_state.lastAckTestS = 0;
+		ack = LORAWAN_SEND_CONFIRMED;
+	}
 
+	if ( p == FRAME_SENSOR ) {
+		// +------------+---------------+-----------------+-------------+
+		// | Temp 0.1C  | Humidity 0.5% | Pressure 0.1hPa | Light 1 Lux |
+		// +------------+---------------+-----------------+-------------+
 		cayenne.temperature = murawan_state.lastTemp/100;	// from mC to dC
 		itsdk_cayenne_encodePayload(0,ITSDK_CAYENNE_TYPE_TEMPERATURE,&cayenne,frBuffer,&index,128);
 		cayenne.humidity = murawan_state.lastHumidity / 500; // from m% to 0,5%
@@ -237,6 +283,9 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 		sPort = 1;
 
 	} else if ( p == FRAME_BAT ) {
+		// +------------+-------------+-------------+-------------+----------+
+		// | VBat 0.01V | Cell1 0.01V | Cell2 0.01V | Cell3 0.01V | Coulomb  |
+		// +------------+-------------+-------------+-------------+----------+
 		cayenne.analog_input = murawan_state.lastvBatmV/10;
 		itsdk_cayenne_encodePayload(8,ITSDK_CAYENNE_TYPE_ANALOG_INPUT,&cayenne,frBuffer,&index,128);
 		cayenne.analog_input = murawan_state.lastCell1mV/10;
@@ -248,12 +297,26 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 		cayenne.analog_input = murawan_state.lastCoulomb;
 		itsdk_cayenne_encodePayload(12,ITSDK_CAYENNE_TYPE_ANALOG_INPUT,&cayenne,frBuffer,&index,128);
 		sPort = 2;
-	}
-
-	itsdk_lorawan_sendconf_t ack = LORAWAN_SEND_UNCONFIRMED;
-	if ( murawan_state.lastAckTestS > itsdk_config.app.ackDuty*itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S) {
-		murawan_state.lastAckTestS = 0;
-		ack = LORAWAN_SEND_CONFIRMED;
+	} else if ( p == FRAME_BOOT ) {
+		// +------+------+------+------+------+-----+-----+----------+---------+-----------+---------+
+		// | 0x01 | Reset Cause | VBat 0.001V | Temp 0.1C | SendDuty | Antenna | SleepDuty | batDuty |
+		// +------+------+------+------+------+-----+-----+----------+---------+-----------+---------+
+		// Frame boot frame, not cayenne style
+		sPort = 0;	// admin frame
+		ack = LORAWAN_SEND_CONFIRMED;	// override
+		frBuffer[0] = 0x01;				// header
+		frBuffer[1] = (murawan_state.lastResetCause & 0xFF00) >> 8;
+		frBuffer[2] = (murawan_state.lastResetCause & 0xFF);
+		frBuffer[3] = (murawan_state.lastvBatmV & 0xFF00 ) >> 8;
+		frBuffer[4] = (murawan_state.lastvBatmV & 0xFF );
+		frBuffer[5] = ((int16_t)(murawan_state.lastTemp / 100) & 0xFF00 ) >> 8;
+		frBuffer[6] = ((int16_t)(murawan_state.lastTemp / 100) & 0xFF );
+		frBuffer[7] = (itsdk_config.app.sendDuty);
+		frBuffer[8] = (uint8_t)(itsdk_config.app.antennaChoice);
+		frBuffer[9] = (uint8_t)(itsdk_config.app.sendDuty);
+		frBuffer[10] = (uint8_t)(itsdk_config.app.sleepDuty);
+		frBuffer[11] = (uint8_t)(itsdk_config.app.batDuty);
+		index=12;
 	}
 
 	uint8_t rPort,rSize=32;
@@ -273,9 +336,9 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 	switch ( r ) {
 		case LORAWAN_SEND_ACKED_WITH_DOWNLINK:
 			// case with downlink data
+			proceed_downlink(rPort,rSize,rData);		// missing break is normal
 		case LORAWAN_SEND_ACKED_WITH_DOWNLINK_PENDING:
 			// case with downlink data + pending downlink on server side.
-			proceed_downlink(rPort,rSize,rData);
 			murawan_state.ackFailed = 0;
 			break;
 		case LORAWAN_SEND_ACKED:

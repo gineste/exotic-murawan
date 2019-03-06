@@ -81,6 +81,7 @@ void murawan_setup() {
 	murawan_state.lastvBatmV = 0;
 	murawan_state.lastCurrent = 0;
 	murawan_state.lastCoulomb = 0;
+	murawan_state.bootFrameSent = 0;
 	// init vbat values values
 	switch ( drivers_max17205_isReady() ) {
 	case MAX17205_SUCCESS:
@@ -119,6 +120,7 @@ void murawan_print_state() {
 	_itsdk_console_printf("state.lastCurrent : %d uA\r\n",murawan_state.lastCurrent);
 	_itsdk_console_printf("state.lastCoulomb : %d C\r\n",murawan_state.lastCoulomb);
 
+	_itsdk_console_printf("state.lastResetCause : 0x%04X \r\n",murawan_state.lastResetCause);
 	_itsdk_console_printf("state.connection : %d \r\n",murawan_state.connection);
 	_itsdk_console_printf("state.connectionFailed : %d \r\n",murawan_state.connectionFailed);
 	_itsdk_console_printf("stm.currentState : %s \r\n",murawan_stm.stm[murawan_stm.currentState].name);

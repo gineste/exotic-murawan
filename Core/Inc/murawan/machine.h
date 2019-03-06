@@ -38,11 +38,13 @@
 #define MURAWAN_ST_RUN 			2
 #define MURAWAN_ST_SEND			3
 #define MURAWAN_ST_SENDBAT		4
-#define MURAWAN_ST_JOIN			5
+#define MURAWAN_ST_SENDBOOT		5
+#define MURAWAN_ST_JOIN			6
 
 
 #define FRAME_SENSOR			((void *)0)
 #define FRAME_BAT				((void *)1)
+#define FRAME_BOOT				((void *)2)
 
 
 typedef enum __attribute__ ((__packed__)) {
@@ -59,6 +61,8 @@ typedef struct {
 	uint32_t	lastAckTestS;				// time in S since last test
 	uint32_t	lastConnectTryS;			// time in S since last connection try
 	uint8_t		ackFailed;					// Number of ack tried failed
+	uint16_t	lastResetCause;				// Last reset reason
+	uint8_t		bootFrameSent:1;			// The reboot message has been sent
 
 	int32_t  	lastTemp;					// Last temperature in m°C
 	uint32_t 	lastHumidity;				// Last humidity in m%

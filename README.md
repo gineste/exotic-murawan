@@ -87,3 +87,74 @@ Un exemple de client est disponible dans le github murawan.
 ![alt conso](https://github.com/disk91/exotic-murawan/raw/master/Capture-ecran-2019-03-06-21.13.30.png)
 
 
+
+## Format des messages
+
+### Message des Capteurs d'environnement
+
+Port 1 - Format Cayenne
+```C
+// +------------+---------------+-----------------+-------------+
+// | Temp 0.1C  | Humidity 0.5% | Pressure 0.1hPa | Light 1 Lux |
+// +------------+---------------+-----------------+-------------+
+```
+
+### Message d'état des batteries
+
+Port 2 - Format Cayenne
+```C
+// +------------+-------------+-------------+-------------+----------+
+// | VBat 0.01V | Cell1 0.01V | Cell2 0.01V | Cell3 0.01V | Coulomb  |
+// +------------+-------------+-------------+-------------+----------+
+```
+
+### Message de boot emis 5m apres un restart
+
+Port 0 - Format Raw
+```C 
+// +------+------+------+------+------+-----+-----+----------+---------+-----------+---------+
+// | 0x01 | Reset Cause | VBat 0.001V | Temp 0.1C | SendDuty | Antenna | SleepDuty | BatDuty |
+// +------+------+------+------+------+-----+-----+----------+---------+-----------+---------+
+```
+
+* Reset Cause
+	0 - Under voltage
+	1 - Reset Pin
+	2 - Power on
+	3 - Soft Reset
+	4 - IWDG
+	5 - WWDG 
+	6 - Low Power
+
+* SendDuty: temps entre deux mesure environmental et communication associée x 10s
+* Antenna: 
+	0 - PiFa
+	1 - PCB
+* SleepDuty: temps entre deux tentatives de reconnexion au reseau lorawan exprimé en nombre de SendDuty
+* BatDuty: temps entre deux emission de message de status batterie x 10m
+
+### Downlink configuration message
+
+Port 0 - Format Raw
+```C
+// +------+------------+----------+---------+----------+-----------+---------+---------------+
+// | 0xA5 | SetupFlags | sendDuty | ackDuty | ackRetry | sleepDuty | batDuty | antennaChoice |
+// +------+------------+----------+---------+----------+-----------+---------+---------------+
+// Setup Flags field:
+//  1 - Reset					0x10 - Update ackRetry
+//  2 - Factory defaults		0x20 - Update sleepDuty
+//  4 - Update sendDuty		    0x40 - Update batDuty
+//  8 - Update ackDuty			0x80 - Update antenna Choice
+``` 
+
+* SendDuty: temps entre deux mesure environmental et communication associée x 10s
+* AckDuty: nombre de SendDuty periode avant d'emettre une trame avec ack pour vérifier l'accès au reseau
+* AckRetry: nombre de AckDuty manqué avant de considérer la connexion comme perdue et se reconnecter
+* SleepDuty: temps entre deux tentatives de reconnexion au reseau lorawan exprimé en nombre de SendDuty
+* BatDuty: temps entre deux emission de message de status batterie x 10m
+* Antenna: 
+	0 - PiFa
+	1 - PCB
+	
+
+

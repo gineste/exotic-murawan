@@ -46,7 +46,7 @@ typedef enum __attribute__ ((__packed__)) {
 #define MURAWAN_CONFIG_SLEEPDUTY   20		// 20*MURAWAN_CONFIG_SENDDUTY (10 min) time before trying to reconnect
 #define MURAWAN_CONFIG_ANTENNA		MURAWAN_ANTENNA_PIFA
 #define MURAWAN_CONFIG_BATDUTY	   12		// Every 12*10m = 2h send the battery status frame
-
+#define MURAWAN_CONFIG_BOOTFRM_S  (5*60)	// Boot frame after 5 minutes
 /**
  * The application configuration specific fields are stored in this structure
  * The structure size must be 32b aligned.
