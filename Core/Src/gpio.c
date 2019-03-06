@@ -199,6 +199,16 @@ void stm32l_lowPowerRestoreGpioConfig() {
 	  GPIO_InitStruct.Pull = GPIO_NOPULL;
 	  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+	  /* GPIO A : les signaux restants */
+	  HAL_GPIO_WritePin(GPIOA, RADIO_TCXO_VCC_Pin| RADIO_ANT_SWITCH_RX_Pin, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(GPIOA, RADIO_NSS_Pin, GPIO_PIN_SET);
+	  GPIO_InitStruct.Pin = RADIO_NSS_Pin|RADIO_TCXO_VCC_Pin|RADIO_ANT_SWITCH_RX_Pin;
+	  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	  GPIO_InitStruct.Pull = GPIO_NOPULL;
+	  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+	  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+
 	  /* EXTI interrupt init*/
 	  HAL_NVIC_SetPriority(EXTI0_1_IRQn, 0, 0);
 	  HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);
@@ -207,11 +217,15 @@ void stm32l_lowPowerRestoreGpioConfig() {
 	  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 
+
 	  if ( itsdk_config.app.antennaChoice == MURAWAN_ANTENNA_PIFA ){
 		murawan_antenna_selectPifa();
 	  } else {
 		murawan_antenna_selectPCB();
 	  }
+
+
+
 
 }
 /* USER CODE END 2 */

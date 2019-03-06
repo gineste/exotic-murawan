@@ -103,8 +103,11 @@
 								/*	 | __LP_HALT_I2C2	*/				\
 									 | __LP_HALT_SPI1					\
 									 | __LP_HALT_SPI2					\
+									 | __LP_HALT_TIM21					\
+									 | __LP_HALT_ADC1					\
 									)										// extra module to stop during low power phase
-#define ITSDK_LOWPOWER_GPIO_A_KEEP	(  __LP_GPIO_1     /* LoRa RF Sw */ \
+#define ITSDK_LOWPOWER_GPIO_A_KEEP	(   __LP_GPIO_NONE 						\
+								/*   | __LP_GPIO_1 * */    /* LoRa RF Sw */ \
 								/*	 | __LP_GPIO_2 */  /* nc uart2 */ 	\
 								/*	 | __LP_GPIO_3 */  /* nc uart2 */ 	\
 								/*	 | __LP_GPIO_4 */  /* not used */	\
@@ -113,11 +116,11 @@
 								/*	 | __LP_GPIO_7 */  /* spi1 */		\
 								/*	 | __LP_GPIO_8 */  /* ant switch */	\
 								/*	 | __LP_GPIO_9 */  /* ant switch */	\
-									 | __LP_GPIO_12	   /* LoRa Tcxo */	\
+								/*	 | __LP_GPIO_12 * */	   /* LoRa Tcxo */	\
 								/*	 | __LP_GPIO_13 */ /* lpuart */		\
 								/*	 | __LP_GPIO_14	*/ /* lpuart */		\
-									 | __LP_GPIO_15	   /* LoRa Nss */	\
-		                            )										// Keep activ (led 2, lpuart, radio, spi1, sx1276 GPIO4) removed uart2
+								/*	 | __LP_GPIO_15	* */  /* LoRa Nss */	\
+		                            )										// Gain de 10uA @10V en coupant ce bank les  * */ sont les dernier desactivés
 #define ITSDK_LOWPOWER_GPIO_B_KEEP	(  __LP_GPIO_NONE 						\
 								/*     __LP_GPIO_0 */   /* LoRa Dio2 */ 	\
 								/*   | __LP_GPIO_1 */ 	/* LoRa Dio1 */ 	\
@@ -141,7 +144,7 @@
 								/*	  | __LP_GPIO_13 */ /* LoRa Dio3*/	    \
 								/*	  | __LP_GPIO_14 */ /* nc */			\
 								/*	  | __LP_GPIO_15 */ /* nc */			\
-									)										// keep radio
+									)										// keep radio signals => if unactivated the consumption of the radio part is higher
 #define ITSDK_LOWPOWER_GPIO_D_KEEP	(__LP_GPIO_NONE)						// During Low Power mode, the GPIO bank D are all off (not implemented yet)
 #define ITSDK_LOWPOWER_GPIO_E_KEEP	(__LP_GPIO_NONE)						// During Low Power mode, the GPIO bank E are all off (not implemented yet)
 #define ITSDK_LOWPOWER_GPIO_H_KEEP	(__LP_GPIO_NONE)						// During Low Power mode, the GPIO bank H are all off (not implemented yet)
