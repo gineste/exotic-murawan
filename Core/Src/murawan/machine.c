@@ -311,10 +311,9 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 		frBuffer[6] = ((int16_t)(murawan_state.lastTemp / 100) & 0xFF );
 		frBuffer[7] = (itsdk_config.app.sendDuty);
 		frBuffer[8] = (uint8_t)(itsdk_config.app.antennaChoice);
-		frBuffer[9] = (uint8_t)(itsdk_config.app.sendDuty);
-		frBuffer[10] = (uint8_t)(itsdk_config.app.sleepDuty);
-		frBuffer[11] = (uint8_t)(itsdk_config.app.batDuty);
-		index=12;
+		frBuffer[9] = (uint8_t)(itsdk_config.app.sleepDuty);
+		frBuffer[10] = (uint8_t)(itsdk_config.app.batDuty);
+		index=11;
 	}
 
 	uint8_t rPort,rSize=32;
