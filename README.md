@@ -82,3 +82,8 @@ Un exemple de client est disponible dans le github murawan.
 ## MVP3
 * Capture des informations de niveau de batterie. La periode est donnée par le parametre batDuty par pas de 10 minutes.
 * Selon que l'alim est suffisante ou non seule le vbat est remonté ou l'ensemble des information des cellules sont remontés.
+
+* status de consommation:
+![alt conso](https://github.com/disk91/exotic-murawan/raw/master/Capture-ecran-2019-03-06-21.13.30.png)
+
+
