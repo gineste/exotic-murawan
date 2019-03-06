@@ -67,8 +67,6 @@ void murawan_stm_updateTiming() {
  * Setup step, here we are configuring the hardware and software stuff
  */
 uint16_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t tLoop) {
-	log_info("In Setup %d,%d\r\n",cLoop,tLoop);
-
 
 	static itsdk_lorawan_channelInit_t channels= ITSDK_LORAWAN_CHANNEL;
 	#ifdef ITSDK_LORAWAN_CHANNEL
@@ -230,7 +228,7 @@ void proceed_downlink(uint8_t rPort, uint8_t rSize,uint8_t * rData) {
 	//  4 - Update sendDuty			0x40 - Update batDuty
 	//  8 - Update ackDuty			0x80 - Update antenna Choice
 	ITSDK_ERROR_REPORT(APP_ERROR_MURAWAN_DOWNLINK,0);
-	if ( rPort == 0 && rSize == 8 && rData[0] == 0xA5 ) {
+	if ( rPort == 5 && rSize == 8 && rData[0] == 0xA5 ) {
 		uint8_t flag = rData[1];
 		if ( flag & 0x1 ) itsdk_reset();
 		if ( flag & 0x2 ) {
@@ -302,7 +300,7 @@ uint16_t murawan_stm_stSend(void * p, uint8_t cState, uint16_t cLoop, uint32_t t
 		// | 0x01 | Reset Cause | VBat 0.001V | Temp 0.1C | SendDuty | Antenna | SleepDuty | batDuty |
 		// +------+------+------+------+------+-----+-----+----------+---------+-----------+---------+
 		// Frame boot frame, not cayenne style
-		sPort = 0;	// admin frame
+		sPort = 5;	// admin frame
 		ack = LORAWAN_SEND_CONFIRMED;	// override
 		frBuffer[0] = 0x01;				// header
 		frBuffer[1] = (murawan_state.lastResetCause & 0xFF00) >> 8;

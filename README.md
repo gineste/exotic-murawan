@@ -110,7 +110,7 @@ Port 2 - Format Cayenne
 
 ### Message de boot emis 5m apres un restart
 
-Port 0 - Format Raw
+Port 5 - Format Raw
 ```C 
 // +------+------+------+------+------+-----+-----+----------+---------+-----------+---------+
 // | 0x01 | Reset Cause | VBat 0.001V | Temp 0.1C | SendDuty | Antenna | SleepDuty | BatDuty |
@@ -135,7 +135,7 @@ Port 0 - Format Raw
 
 ### Downlink configuration message
 
-Port 0 - Format Raw
+Port 5 - Format Raw
 ```C
 // +------+------------+----------+---------+----------+-----------+---------+---------------+
 // | 0xA5 | SetupFlags | sendDuty | ackDuty | ackRetry | sleepDuty | batDuty | antennaChoice |
