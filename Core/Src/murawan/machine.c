@@ -227,8 +227,8 @@ void proceed_downlink(uint8_t rPort, uint8_t rSize,uint8_t * rData) {
 	//  2 - Factory defaults		0x20 - Update sleepDuty
 	//  4 - Update sendDuty			0x40 - Update batDuty
 	//  8 - Update ackDuty			0x80 - Update antenna Choice
-	ITSDK_ERROR_REPORT(APP_ERROR_MURAWAN_DOWNLINK,0);
 	if ( rPort == 5 && rSize == 8 && rData[0] == 0xA5 ) {
+		ITSDK_ERROR_REPORT(APP_ERROR_MURAWAN_DOWNLINK,0);
 		uint8_t flag = rData[1];
 		if ( flag & 0x1 ) itsdk_reset();
 		if ( flag & 0x2 ) {
