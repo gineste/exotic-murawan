@@ -88,9 +88,20 @@ public class Tag {
     public void uzConsole(int offset) {
         try {
             UzConsole n = new UzConsole(_uid,_reader,recognizedType5Tag,offset);
+            n.interractiveCommand();
         } catch ( TagException e ) {
             Tools.log_on = true;
             return;
+        }
+    }
+
+    public boolean uzCommand(String cmd, int offset) {
+        try {
+            UzConsole n = new UzConsole(_uid,_reader,recognizedType5Tag,offset);
+            return n.executeCommand(cmd);
+        } catch ( TagException e ) {
+            Tools.log_on = true;
+            return false;
         }
     }
 

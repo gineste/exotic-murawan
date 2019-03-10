@@ -105,6 +105,11 @@ public class UzConsole {
         this._reader = reader;
         this._tag = tag;
         this._offset = offset;
+    }
+
+
+
+    public void interractiveCommand() throws TagException {
         Header _h = new Header();
 
         // get header bloc
@@ -123,108 +128,139 @@ public class UzConsole {
                             "mcuReadDone("+_h.mcuReadDone+")");
                      */
                     System.out.print("uzSerial >");
-                    int blockId;
                     if ( _h.mcuIsWritting == 0 ) {
                         System.out.print("> ");
                         Scanner scanner = new Scanner(System.in);
                         String cmd = scanner.nextLine();
-                        if (cmd.length() > 0) {
-                            // transform command line into a byte array of char
-                            // add the line ending
-                            char[] ca = cmd.toCharArray();
-                            int len = ca.length + 3;
-                            int lblock = ((len & 3) == 0) ? len >> 2 : 1 + (len >> 2);
-                            byte[] ba = new byte[4 * lblock];
-                            for (int i = 0; i < ca.length; i++) {
-                                ba[i] = (byte) ca[i];
-                            }
-                            ba[ca.length] = (byte) '\r';
-                            ba[ca.length + 1] = (byte) '\n';
-                            ba[ca.length + 2] = (byte) '\0';
-                            for (int i = (ca.length + 3); i < 4 * lblock; i++) {
-                                ba[i] = 0;
-                            }
-
-                            // Ready to write buffer
-                            _h.hostIsWritting = 1;
-                            _h.hostWritedone = 0;
-                            _h.mcuReadDone = 0;
-                            _h.writeHeader(_offset, _tag);
-                            try {
-                                Thread.sleep(50);
-                            } catch (InterruptedException e) {
-                            }
-                            Tools.log_on = false;
-                            this.writeBlockWithRetry(_offset + 1, ba);
-                            Tools.log_on = true;
-                            _h.hostIsWritting = 0;
-                            _h.hostWritedone = 1;
-                            _h.mcuWriteDone = 0;
-                            _h.writeHeader(_offset, _tag);
-                            // wait for response
-                            // do {
-                            //    _h.loadHeader(_offset,_tag);
-                            //    try { Thread.sleep(50); } catch ( InterruptedException e ) {};
-                            //} while ( _h.mcuReadDone == 0 );
-                            boolean endof = false;
-                            while (!endof) {
-                                int tries = 0;
-                                do {
-                                    _h.loadHeader(_offset, _tag);
-                                    try {
-                                        Thread.sleep(50);
-                                    } catch (InterruptedException e) {
-                                    }
-                                    tries++;
-                                } while (_h.mcuWriteDone == 0 && tries < 30);
-                                if (tries == 30) {
-                                    endof = true;
-                                } else {
-                                    // get response
-                                    Tools.log_on = false;
-                                    byte dresp []  = new byte[84];
-                                    ReadBlockResult resp = this.readBlockWithRetry(_offset + 1, 10);
-                                    boolean done = false;
-                                    for ( int i = 0 ; i < 10*4 ; i++) {
-                                        dresp[i] = resp.data[i];
-                                        if ( dresp[i] == 0 ) {
-                                            done = true;
-                                            break;
-                                        }
-                                    }
-                                    if ( ! done ) {
-                                        resp = this.readBlockWithRetry(_offset+1+10, 11);
-                                        for ( int i = 0 ; i < 11*4 ; i++ ) {
-                                            dresp[40+i] = resp.data[i];
-                                        }
-                                    }
-                                    Tools.log_on = true;
-                                    _h.hostReadDone = 1;
-                                    _h.mcuWriteDone = 0;
-                                    _h.writeHeader(_offset, _tag);
-                                    String srep = Tools.byteArrayToString(dresp);
-                                    System.out.print(srep);
-                                    if (srep.compareToIgnoreCase("OK") == 0 || srep.compareToIgnoreCase("KO") == 0) {
-                                        endof = true;
-                                    }
-                                }
-
-                            }
-
-                        } else {
+                        try {
+                            executeCommand(cmd);
+                        } catch (TagException e) {
+                            // normal exit of the command
                             break;
                         }
                     }
                 } else {
                     System.err.println("uzSerial header not found");
                 }
-           }
+            }
 
         } catch (STException e) {
             System.err.println("crash");
             e.printStackTrace();
             throw new TagException();
         }
+
+    }
+
+
+    /**
+     * Execute a command and return true if it has respond OK
+     * @param cmd
+     * @return
+     * @throws STException
+     */
+    public boolean executeCommand(String cmd) throws TagException {
+        Header _h = new Header();
+        try {
+            _h.loadHeader(_offset,_tag);
+            if ( _h.magic == 0xCAFE && _h.mcuIsWritting == 0 ) {
+                if (cmd.length() > 0) {
+                    // transform command line into a byte array of char
+                    // add the line ending
+                    char[] ca = cmd.toCharArray();
+                    int len = ca.length + 3;
+                    int lblock = ((len & 3) == 0) ? len >> 2 : 1 + (len >> 2);
+                    byte[] ba = new byte[4 * lblock];
+                    for (int i = 0; i < ca.length; i++) {
+                        ba[i] = (byte) ca[i];
+                    }
+                    ba[ca.length] = (byte) '\r';
+                    ba[ca.length + 1] = (byte) '\n';
+                    ba[ca.length + 2] = (byte) '\0';
+                    for (int i = (ca.length + 3); i < 4 * lblock; i++) {
+                        ba[i] = 0;
+                    }
+
+                    // Ready to write buffer
+                    _h.hostIsWritting = 1;
+                    _h.hostWritedone = 0;
+                    _h.mcuReadDone = 0;
+                    _h.writeHeader(_offset, _tag);
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException e) {
+                    }
+                    Tools.log_on = false;
+                    this.writeBlockWithRetry(_offset + 1, ba);
+                    Tools.log_on = true;
+                    _h.hostIsWritting = 0;
+                    _h.hostWritedone = 1;
+                    _h.mcuWriteDone = 0;
+                    _h.writeHeader(_offset, _tag);
+                    // wait for response
+                    // do {
+                    //    _h.loadHeader(_offset,_tag);
+                    //    try { Thread.sleep(50); } catch ( InterruptedException e ) {};
+                    //} while ( _h.mcuReadDone == 0 );
+                    while (true) {
+                        int tries = 0;
+                        do {
+                            _h.loadHeader(_offset, _tag);
+                            try {
+                                Thread.sleep(50);
+                            } catch (InterruptedException e) {
+                            }
+                            tries++;
+                        } while (_h.mcuWriteDone == 0 && tries < 30);
+                        if (tries == 30) {
+                            return false;
+                        } else {
+                            // get response
+                            Tools.log_on = false;
+                            byte dresp[] = new byte[84];
+                            ReadBlockResult resp = this.readBlockWithRetry(_offset + 1, 10);
+                            boolean done = false;
+                            for (int i = 0; i < 10 * 4; i++) {
+                                dresp[i] = resp.data[i];
+                                if (dresp[i] == 0) {
+                                    done = true;
+                                    break;
+                                }
+                            }
+                            if (!done) {
+                                resp = this.readBlockWithRetry(_offset + 1 + 10, 11);
+                                for (int i = 0; i < 11 * 4; i++) {
+                                    dresp[40 + i] = resp.data[i];
+                                }
+                            }
+                            Tools.log_on = true;
+                            _h.hostReadDone = 1;
+                            _h.mcuWriteDone = 0;
+                            _h.writeHeader(_offset, _tag);
+                            String srep = Tools.byteArrayToString(dresp);
+                            System.out.print(srep);
+                            String sreps = srep.substring(0,2);
+                            if (sreps.compareToIgnoreCase("OK") == 0 ) {
+                                return true;
+                            } else if ( sreps.compareToIgnoreCase("KO") == 0) {
+                                return false;
+                            }
+                        }
+
+                    }
+                } else {
+                    throw new TagException();
+                }
+            } else {
+                throw new TagException();
+            }
+
+        } catch (STException e) {
+            System.err.println("crash");
+            e.printStackTrace();
+            throw new TagException();
+        }
+
     }
 
 }

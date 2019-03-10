@@ -13,6 +13,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.StringTokenizer;
 import java.util.logging.LogManager;
 
 public class Main {
@@ -170,8 +171,37 @@ public class Main {
                 } else if ( mode == mode_e.UZSERIAL_INTERACTIVE ) {
                     m.t.uzConsole(42);
                     mode = mode_e.INTERACTIVE;
+                } else if ( mode == mode_e.UZSERIAL ) {
+                    StringTokenizer st = new StringTokenizer(args[0],":");
+                    if ( st.countTokens() != 3 ) {
+                        System.err.println("Syntax error");
+                        return;
+                    }
+                    String option = st.nextToken();
+                    String pass = st.nextToken();
+                    String cmds = st.nextToken();
+                    if ( pass.length() > 0 ) {
+                        // logout
+                        m.t.uzCommand("X",42);
+                        // login on console
+                        if ( ! m.t.uzCommand(pass,42) ) {
+                            // retry
+                            if ( ! m.t.uzCommand(pass,42) ) {
+                                System.err.println("Impossible to login on console");
+                                return;
+                            }
+                        }
+                        // login ok
+                        StringTokenizer st1 = new StringTokenizer(cmds,",");
+                        while (st1.hasMoreTokens()) {
+                            String c = st1.nextToken();
+                            System.out.println(">> "+c);
+                            System.out.print("<< ");
+                            if ( ! m.t.uzCommand(c,42) ) return;
+                        }
+                    }
+                    return;
                 }
-
             }
         } catch (TagException e) {
             return;
