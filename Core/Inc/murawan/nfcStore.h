@@ -32,7 +32,7 @@
 
 #define NFCSTORE_DATA_MAGIC			0x4449534B
 #define NFCSTORE_DATA_ENTRY_SIZE	3															    // size of the entry in block of 32b
-#define NFCSTORE_DATA_SIZE			168
+#define NFCSTORE_DATA_SIZE			1024
 #define NFCSTORE_AVAILABLE_ENTRIES	((NFCSTORE_DATA_SIZE / (4*NFCSTORE_DATA_ENTRY_SIZE)) -1)  // Number of block we can store in the Zone 1
 
 // The block Header is on block starting a offset of the USER1 zone

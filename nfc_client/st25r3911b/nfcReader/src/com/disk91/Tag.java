@@ -14,7 +14,7 @@ public class Tag {
 
     private byte [] _uid;
     private RFGenericReader _reader;
-    private Type5Tag recognizedType5Tag;
+    private ST25DVTag recognizedType5Tag;
 
     public Tag(RFGenericReader reader, byte[] uid) {
         this._uid = uid;
@@ -104,5 +104,29 @@ public class Tag {
             return false;
         }
     }
+
+    /**
+     * Access to the ftm serial console
+     */
+    public void ftmConsole() {
+        try {
+            FtmConsole n = new FtmConsole(_uid,_reader,recognizedType5Tag);
+            n.interractiveCommand();
+        } catch ( TagException e ) {
+            Tools.log_on = true;
+            return;
+        }
+    }
+
+    public boolean ftmCommand(String cmd) {
+        try {
+            FtmConsole n = new FtmConsole(_uid,_reader,recognizedType5Tag);
+            return n.executeCommand(cmd);
+        } catch ( TagException e ) {
+            Tools.log_on = true;
+            return false;
+        }
+    }
+
 
 }

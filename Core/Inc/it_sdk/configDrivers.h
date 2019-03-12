@@ -101,7 +101,8 @@
 // NFC Tag : ST25DV
 
 #define ITSDK_DRIVERS_ST25DV					__ENABLE
-#define ITSDK_DRIVERS_ST25DV_WITH_SERIALUZ		__ENABLE					// Activate the serial User communication code
+#define ITSDK_DRIVERS_ST25DV_WITH_SERIALUZ		__DISABLE					// Activate the serial User communication code
+#define ITSDK_DRIVERS_ST25DV_WITH_SERIALFTM		__ENABLE					// Activate the serial FTM communication code
 
 #if ITSDK_DRIVERS_ST25DV == __ENABLE
 	#ifndef __I2C_INCLUDED
@@ -123,18 +124,18 @@
 																			// for the rest of the memory area an extended read is needed.
 																			// For a larger reader compatibility, I assume it is better to have
 																			//  the Zone 1 & Zone 2 under this 1KB limit.
-#define ITSDK_DRIVERS_ST25DV_USER_Z1_SIZE		256							// Size in byte for User Zone 1 - This zone have no security option
+#define ITSDK_DRIVERS_ST25DV_USER_Z1_SIZE		1024						// Size in byte for User Zone 1 - This zone have no security option
 #define ITSDK_DRIVERS_ST25DV_USER_Z1_ACCESS		_ST25DV_ACCESS_RW_OPEN		// Zone 1 is read only
 
-#define ITSDK_DRIVERS_ST25DV_USER_Z2_SIZE		768							// Size in byte for User Zone 2
+#define ITSDK_DRIVERS_ST25DV_USER_Z2_SIZE		1024						// Size in byte for User Zone 2
 #define ITSDK_DRIVERS_ST25DV_USER_Z2_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z2_ACCESS		_ST25DV_ACCESS_RO_OPEN		// Zone 2 is read only
 
-#define ITSDK_DRIVERS_ST25DV_USER_Z3_SIZE		4096						// Size in byte for User Zone 2
+#define ITSDK_DRIVERS_ST25DV_USER_Z3_SIZE		2048						// Size in byte for User Zone 2
 #define ITSDK_DRIVERS_ST25DV_USER_Z3_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z3_ACCESS		_ST25DV_ACCESS_RW_RWSECURED	// Zone 3 is RW both secured by a password
 
-#define ITSDK_DRIVERS_ST25DV_USER_Z4_SIZE		3072						// The reality is Zone 4 is up the memory size.
+#define ITSDK_DRIVERS_ST25DV_USER_Z4_SIZE		4096						// The reality is Zone 4 is up the memory size.
 #define ITSDK_DRIVERS_ST25DV_USER_Z4_PASS		__ENABLE
 #define ITSDK_DRIVERS_ST25DV_USER_Z4_ACCESS		_ST25DV_ACCESS_RW_RWSECURED	// Zone 4 is RW both secured by a password
 

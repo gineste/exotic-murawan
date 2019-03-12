@@ -94,19 +94,10 @@ uint16_t murawan_stm_stSetup(void * p, uint8_t cState, uint16_t cLoop, uint32_t 
 	}
 
 	// setup NFC
-	if (drivers_st25dv_setup(ST25DV_MODE_SERIALUZ) != ST25DV_SUCCESS ) {
+	if (drivers_st25dv_setup(ST25DV_MODE_FTM) != ST25DV_SUCCESS ) {
 		ITSDK_ERROR_REPORT(APP_ERROR_ST25DV_FAULT,0);
 	}
 	nfcStore_setup();
-
-//	uint8_t messages[16] = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 };
-//	while ( true ) {
-//		drivers_st25dv_goWakeUp();
-//		drivers_st25dv_ftmWrite(messages,16);
-//		drivers_st25dv_goLowPower();
-//	    wdg_refresh();
-//		itsdk_delayMs(4000);
-//	}
 
 	// Setup the state
 	murawan_setup();

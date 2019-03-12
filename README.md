@@ -157,4 +157,22 @@ Port 5 - Format Raw
 	1 - PCB
 	
 
+## MVP 5
+ * Acces à la memoire NFC en utilisant le lecteur Devkit ST
+ * Utiliser le client adhoc Java disponible dans le repo dans _nfc_client/st25r3911b/nfcReader/out/artifects/nfcReader_jar_
+ * utilisation en mode interractif:
+ ```C
+ java -d32 -jar nfcReader.jar
+ ```
 
+ * Acces à l'aide
+ ```C
+ java -d32 -jar nfcReader.jar -h
+ ```
+ 
+ * Utilisation dans un script automatique => exemple
+ ```C
+ java -d32 -jar nfcReader.jar -ftms:changeme:s,c
+ ```
+ Affiche le status et la config apres s'etre loggé sur la console.
+ 

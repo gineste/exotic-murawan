@@ -37,7 +37,7 @@ public class Main {
         System.setErr(new PrintStream(System.err) {
             @Override
             public void println(String x) {
-                if ( Tools.log_on )
+                //if ( Tools.log_on )
                     super.println("## "+x);
             }
         });
@@ -128,6 +128,7 @@ public class Main {
                 System.out.println("          > Serial-NFC over UserMemory zone");
                 System.out.println("       pass is the console password to be used");
                 System.out.println("       cmd1,... is the list of command to be executed");
+                System.out.println("       a cmd prefixed with # will not stop the script in case of failure");
                 return;
             }
         }
@@ -171,7 +172,7 @@ public class Main {
                 } else if ( mode == mode_e.UZSERIAL_INTERACTIVE ) {
                     m.t.uzConsole(42);
                     mode = mode_e.INTERACTIVE;
-                } else if ( mode == mode_e.UZSERIAL ) {
+                } else if ( mode == mode_e.UZSERIAL || mode == mode_e.FTMSERIAL ) {
                     StringTokenizer st = new StringTokenizer(args[0],":");
                     if ( st.countTokens() != 3 ) {
                         System.err.println("Syntax error");
@@ -181,26 +182,57 @@ public class Main {
                     String pass = st.nextToken();
                     String cmds = st.nextToken();
                     if ( pass.length() > 0 ) {
-                        // logout
-                        m.t.uzCommand("X",42);
-                        // login on console
-                        if ( ! m.t.uzCommand(pass,42) ) {
-                            // retry
-                            if ( ! m.t.uzCommand(pass,42) ) {
-                                System.err.println("Impossible to login on console");
-                                return;
-                            }
+                        switch ( mode ) {
+                            case UZSERIAL:
+                                // logout
+                                m.t.uzCommand("X",42);
+                                // login on console
+                                if ( ! m.t.uzCommand(pass,42) ) {
+                                    // retry
+                                    if ( ! m.t.uzCommand(pass,42) ) {
+                                        System.err.println("Impossible to login on console");
+                                        return;
+                                    }
+                                }
+                                break;
+                            case FTMSERIAL:
+                                // logout
+                                m.t.ftmCommand("X");
+                                // login on console
+                                if ( ! m.t.ftmCommand(pass) ) {
+                                    // retry
+                                    if ( ! m.t.ftmCommand(pass) ) {
+                                        System.err.println("Impossible to login on console");
+                                        return;
+                                    }
+                                }
+                                break;
                         }
                         // login ok
                         StringTokenizer st1 = new StringTokenizer(cmds,",");
                         while (st1.hasMoreTokens()) {
                             String c = st1.nextToken();
+                            boolean acceptError = false;
+                            if ( c.startsWith("#") ) {
+                                acceptError = true;
+                                c = c.substring(1);
+                            }
                             System.out.println(">> "+c);
                             System.out.print("<< ");
-                            if ( ! m.t.uzCommand(c,42) ) return;
+                            switch ( mode ) {
+                                case UZSERIAL:
+                                    if ( ! m.t.uzCommand(c,42) && !acceptError ) return;
+                                    break;
+                                case FTMSERIAL:
+                                    if ( ! m.t.ftmCommand(c)  && !acceptError ) return;
+                                    break;
+                            }
                         }
                     }
                     return;
+                } else if ( mode == mode_e.FTMSERIAL_INTERACTIVE ) {
+                    m.t.ftmConsole();
+                    mode = mode_e.INTERACTIVE;
                 }
             }
         } catch (TagException e) {

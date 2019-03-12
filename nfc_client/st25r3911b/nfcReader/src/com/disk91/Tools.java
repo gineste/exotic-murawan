@@ -44,9 +44,11 @@ public class Tools {
     public static String byteArrayToString(byte [] d) {
         String r = "";
         for ( byte b : d ) {
-            if ( b == 0 ) break;
-            char c = (char)b;
-            r += c;
+            if ( r.length() > 0 && b == 0 ) break;
+            if ( b != 0 ) {
+                char c = (char) b;
+                r += c;
+            }
         }
         return r;
     }
