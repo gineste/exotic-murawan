@@ -161,18 +161,33 @@ Port 5 - Format Raw
  * Acces à la memoire NFC en utilisant le lecteur Devkit ST
  * Utiliser le client adhoc Java disponible dans le repo dans _nfc_client/st25r3911b/nfcReader/out/artifects/nfcReader_jar_
  * utilisation en mode interractif:
- ```C
+```C
  java -d32 -jar nfcReader.jar
- ```
+```
 
  * Acces à l'aide
- ```C
+```C
  java -d32 -jar nfcReader.jar -h
- ```
+```
  
  * Utilisation dans un script automatique => exemple
- ```C
- java -d32 -jar nfcReader.jar -ftms:changeme:s,c
- ```
+```C
+ java -d32 -jar nfcReader.jar -ftms@changeme@s,c
+```
  Affiche le status et la config apres s'etre loggé sur la console.
+ 
+ * Exemple de commissionnement de device avec les ID issus de TTN:
+```C
+java -d32 -jar nfcReader.jar -ftms@changeme@SS:9:0041E674AC0847FA,SS:A:70B3D57ED0017C93,SS:B:50DC5773DECB772892BB96BDAD391577,SS:C:50DC5773DECB772892BB96BDAD391577,S,R
+ - changeme : le mot de passe pour ouvrir l'acces à la consig via la console
+ - SS:9:0041E674AC0847FA : Configure le deviceEUI
+ - SS:A:70B3D57ED0017C93 : Configure l' appEUI
+ - SS:B:50DC5773DECB772892BB96BDAD391577 : Configure l'appKey
+ - SS:C:50DC5773DECB772892BB96BDAD391577 : configure le network key (=appkey)
+ - S : valide la config shadow
+ - R : reset le device
+```
+
+ 
+ 
  

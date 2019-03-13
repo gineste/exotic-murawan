@@ -78,7 +78,7 @@
 																		   // =============================
 
 #define ITSDK_LORAWAN_DEVEUI		{													\
-										0x00, 0xA8, 0x35, 0x35, 0xEE, 0xEE, 0x93, 0x44	\
+										0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00	\
 									}									   // Static DEVEUI (big endian)
 																		   // Bytes are in the same order as
 																		   // in a String.

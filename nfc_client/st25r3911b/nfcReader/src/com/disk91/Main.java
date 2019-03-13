@@ -112,15 +112,15 @@ public class Main {
             if ( arg.startsWith("-values")) {
                 mode = mode_e.LAST_VALUES;
             }
-            if ( arg.startsWith("-ftms:")) {
+            if ( arg.startsWith("-ftms@")) {
                 mode = mode_e.FTMSERIAL;
             }
-            if ( arg.startsWith("-uzs:")) {
+            if ( arg.startsWith("-uzs@")) {
                 mode = mode_e.UZSERIAL;
             }
             if ( args.length > 1 || arg.startsWith("-h") || arg.startsWith("--help") ) {
                 System.out.println("NFC Tool for ItSdK / Murawan");
-                System.out.println("Options are [-values | -ftms:pass:cmd1,cmd2,...,cmdn | -uzs:pass:cmd1,cmd2,...,cmdn ]");
+                System.out.println("Options are [-values | -ftms@pass@cmd1,cmd2,...,cmdn | -uzs@pass@cmd1,cmd2,...,cmdn ]");
                 System.out.println("    * With no arguments, the interactive mode is selected");
                 System.out.println("    * -values : dump the memory zone to extract last measured values");
                 System.out.println("    * -ftms / -uzs  : automatically send command to the device using");
@@ -173,7 +173,7 @@ public class Main {
                     m.t.uzConsole(42);
                     mode = mode_e.INTERACTIVE;
                 } else if ( mode == mode_e.UZSERIAL || mode == mode_e.FTMSERIAL ) {
-                    StringTokenizer st = new StringTokenizer(args[0],":");
+                    StringTokenizer st = new StringTokenizer(args[0],"@");
                     if ( st.countTokens() != 3 ) {
                         System.err.println("Syntax error");
                         return;
