@@ -1,5 +1,14 @@
 # MURAWAN
 
+## Compilation du projet
+
+* Installer AC6 (compilation STM32 basée sur Eclipse => OpenSource)
+[http://www.openstm32.org/HomePage](http://www.openstm32.org/HomePage)
+
+* Comment linker le code de murawan avec le code du SDK
+[![Alt text](https://img.youtube.com/vi/VEWrr4t8ujo/0.jpg)](https://www.youtube.com/watch?v=VEWrr4t8ujo)
+
+
 ## MVP1
 * Verification de la présence d'une configuration (devEUI != 0). Si la config n'est pas faire l'objet se met dans un état d'attente infini. Il sera rebooté apres configuration.
 * La solution lit les capteurs selon un intervalle de temps configurable.
