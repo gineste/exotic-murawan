@@ -54,6 +54,7 @@
 #define ITSDK_CLK_CORRECTION		1000									// correct clock with 1200 o/oo (+20%) of the ticks (used when clk_adjust = 0 or for RTC when CLK_BEST_SRC_RTC)
 #define ITSDK_WITH_ADC				__ADC_ENABLED							// Use of Adc (includes the structures)
 #define ITSDK_ADC1_PIN				14										// Map the channel for ADC on PIN 14 (PA0)
+#define ITSDK_ADC_OVERSAMPLING		16										// Number of ADC read time before averaging
 #define ITSDK_VDD_MV				3300									// VDD value in mV
 #define ITSDK_VBAT_MIN				2000									// MIN value for VBAT in mv
 #define ITSDK_VBAT_MAX				3300									// MAX value for VBAT in mv
@@ -70,7 +71,8 @@
 #define ITSDK_HW_TIMER1_FREQ		32000000								// Primary timer base frequency
 #define ITSDK_HW_TIMER1_MAX			65536									// Timer's counter max value ( 2^size )
 #define ITSDK_TIMER_SLOTS			5										// Maximum number of SOFT TIMER available in parallel - 0 disable SOFT TIMER code
-#define ITSDK_WDG_MS				16000									// WatchDog time out in ms 1 --> 28000 / 0 to disable
+//#define ITSDK_WDG_MS				16000									// WatchDog time out in ms 1 --> 28000 / 0 to disable
+#define ITSDK_WDG_MS				28000									// WatchDog time out in ms 1 --> 28000 / 0 to disable
 #define ITSDK_WDG_CLKFREQ			37000									// Watchdog clock source frequency
 #define ITSDK_CORE_CLKFREQ			32000000								// Core Frequency of the chip
 
@@ -120,7 +122,7 @@
 								/*	 | __LP_GPIO_13 */ /* lpuart */		\
 								/*	 | __LP_GPIO_14	*/ /* lpuart */		\
 								/*	 | __LP_GPIO_15	* */  /* LoRa Nss */	\
-		                            )										// Gain de 10uA @10V en coupant ce bank les  * */ sont les dernier desactivés
+		                            )										// Gain de 10uA @10V en coupant ce bank les  * */ sont les dernier desactivï¿½s
 #define ITSDK_LOWPOWER_GPIO_B_KEEP	(  __LP_GPIO_NONE 						\
 								/*     __LP_GPIO_0 */   /* LoRa Dio2 */ 	\
 								/*   | __LP_GPIO_1 */ 	/* LoRa Dio1 */ 	\
@@ -225,6 +227,35 @@
 
 #define ITSDK_PROTECT_KEY			0xBC65E733 	 							// A random value used to protect the SIGFOX (and others) KEY in memory (better than nothing)
 
+#define ITSDK_DEFAULT_NETWORK		__ACTIV_NETWORK_SIGFOX					// Default network to activate
+#define ITSDK_DEFAULT_REGION		__LPWAN_REGION_EU868				    // default region to activate
+
+
+#define ITSDK_ENCRYPT_AES_SHAREDKEY	( 0xAE632397 ^ ITSDK_PROTECT_KEY )      // CHANGE ME
+																			// Shared Key for CTR generation
+
+#define ITSDK_ENCRYPT_AES_INITALNONCE ( 0x25 )								// CHANGE ME
+																			// Initial value for Nonce used for AES128-CRT
+
+#define ITSDK_ENCRYPT_SPECKKEY		(   (uint64_t)0xEF583AB7A57834BC  \
+									  ^ (  (uint64_t)ITSDK_PROTECT_KEY \
+									     | ((uint64_t)ITSDK_PROTECT_KEY << 32)) \
+									)										// CHANGE ME
+																			// Shared Key for SPECK32/64 Encryption
+
+#define ITSDK_ENCRYPT_AES_MASTERKEYH (   (uint64_t)0x2B7E151628AED2A6  \
+									  ^ (  (uint64_t)ITSDK_PROTECT_KEY \
+									     | ((uint64_t)ITSDK_PROTECT_KEY << 32)) \
+									 )										// CHANGE ME
+																			// Static 16B key used as master key (8B HIGH)
+																			// for end to end encryption
+
+#define ITSDK_ENCRYPT_AES_MASTERKEYL (   (uint64_t)0xABF7158809CF4F3C  \
+									  ^ (  (uint64_t)ITSDK_PROTECT_KEY \
+									     | ((uint64_t)ITSDK_PROTECT_KEY << 32)) \
+									 )										// CHANGE ME
+																		    // Static 16B key used as master key (8B LOW)
+																		    // for end to end encryption
 
 
 #if ITSDK_PLATFORM == __PLATFORM_STM32L0

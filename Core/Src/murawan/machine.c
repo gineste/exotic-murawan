@@ -2,7 +2,7 @@
  * machine.c - The state machine
  * Project : Murawan
  * ----------------------------------------------------------
- * Created on: 13 févr. 2019
+ * Created on: 13 fï¿½vr. 2019
  *     Author: Paul Pinault aka Disk91
  * ----------------------------------------------------------
  * Copyright (C) 2019 Exotic Systems
@@ -152,7 +152,7 @@ uint16_t murawan_stm_stRun(void * p, uint8_t cState, uint16_t cLoop, uint32_t tL
 
 	// Get values when sendDuty time has been reached
 	if ( itsdk_config.app.sendDuty > 0 && murawan_state.lastMeasureS >= itsdk_config.app.sendDuty*MURAWAN_CONFIG_TIME_BASE_S ) {
-		log_info("T%d\r\n",(uint32_t)itsdk_time_get_ms());
+		//log_info("T%d\r\n",(uint32_t)itsdk_time_get_ms());
 
 		murawan_state.lastMeasureS = 0;
 		if ( drivers_bme280_getSensors(&murawan_state.lastTemp,&murawan_state.lastPressure,&murawan_state.lastHumidity) != BME280_SUCCESS ) {

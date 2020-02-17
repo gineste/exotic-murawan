@@ -42,28 +42,71 @@
 #include <murawan/radio.h>
 #include <murawan/machine.h>
 
+uint8_t ATI[] = "ATI\r";
+uint8_t msg[256] = {0};
+uint8_t g_u8callback = 0;
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	g_u8callback = 1;
+}
+
 /**
  * Process the state machine on regular basis
  */
 extern machine_t murawan_stm;
-void task() {
-	statem(&murawan_stm);
+void
+task ()
+{
+	statem (&murawan_stm);
 }
 
 /**
  * On Reset setup
  */
-void project_setup() {
-	log_info("Booting !!\r\n");
-	murawan_state.lastResetCause = itsdk_getResetCause();
-	itdt_sched_registerSched(MURAWAN_CONFIG_TIME_BASE_S*1000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
+void
+project_setup ()
+{
+	//log_info ("Booting !!\r\n");
+
+	/* Try BG96 AT commands here */
+	//log_info("Hal uart start \r\n");
+
+	/*if (HAL_UART_Receive_IT(&hlpuart1, msg, 2) != HAL_OK)
+	{
+			log_info("Hal uart receive IT ERROR !\r\n");
+	}*/
+
+	if (HAL_UART_Transmit(&hlpuart1, ATI, strlen(ATI), HAL_MAX_DELAY) != HAL_OK)
+	{
+			log_info("Hal uart transmit ERROR !\r\n");
+	}
+
+	if (HAL_UART_Receive_IT(&hlpuart1, msg, 52) != HAL_OK)
+	{
+			log_info("Hal uart receive IT ERROR !\r\n");
+	}
+
+	//log_info("Hal uart done \r\n");
+
+	murawan_state.lastResetCause = itsdk_getResetCause ();
+	itdt_sched_registerSched (MURAWAN_CONFIG_TIME_BASE_S * 1000,
+									  ITSDK_SCHED_CONF_IMMEDIATE, &task);
 }
 
 /**
  * LowPower loop
  */
-void project_loop() {
-	st25dv_process();
-	itsdk_lorawan_loop();
+void
+project_loop ()
+{
+	if (g_u8callback == 1)
+	{
+			//DO smthg
+			log_info("here\r\n");
+	}
+
+	st25dv_process ();
+	itsdk_lorawan_loop ();
 }
 
