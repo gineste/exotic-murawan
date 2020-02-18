@@ -1,11 +1,4 @@
 /*
- * AT.c
- *
- *  Created on: 17 févr. 2020
- *      Author: Martin
- */
-
-/*
  *    ____  _  _   __   ____   __    ___    ____  _  _  ____  ____  ____  _  _  ____
  *   (  __)( \/ ) /  \ (_  _) (  )  / __)  / ___)( \/ )/ ___)(_  _)(  __)( \/ )/ ___)
  *    ) _)  )  ( (  O )  )(    )(  ( (__   \___ \ )  / \___ \  )(   ) _) / \/ \\___ \
@@ -31,6 +24,7 @@
 #include <usart.h>
 
 #include <it_sdk/time/timer.h>
+#include <it_sdk/logger/logger.h>
 
 #include "super-tracker/AT.h"
 
@@ -74,9 +68,12 @@ static uint8_t g_au8ATBuffer[AT_RX_BUFFER_SIZE] = { 0u };
 static uint8_t g_au8ATEndOfFrame[AT_EOF_SIZE] = { 'O', 'K', '\r', '\n' }; //AT_END_OF_FRAME;
 static fp_vATCallback_t g_fpCallback;
 
+static uint8_t g_u8UartRxChar = '\0';
+
 /****************************************************************************************
  * Public functions
  ****************************************************************************************/
+
 /**@brief Direct send AT command.
  * @param [in]  p_pu8Msg         : AT message to send
  * @param [in]  p_u8Size         : Size of AT message
@@ -87,21 +84,38 @@ void vAT_DirectSend(uint8_t * p_pu8Msg, uint8_t p_u8Size, fp_vATCallback_t p_fpC
 {
    uint8_t l_au8Buffer[MAX_SIZE_MSG] = { 0u };
    uint8_t l_u8Size = 0u;
+   uint8_t l_u8UartError = 1u;
 
    memcpy(l_au8Buffer, p_pu8Msg, p_u8Size);
    l_u8Size = p_u8Size;
    // End of frame with one of any kind of whitespace (space,tab,newline,etc.)
    l_au8Buffer[l_u8Size++] = '\r';       //Increase index for Uart Length
 
-   if(HAL_UART_Transmit(&huart2, l_au8Buffer, l_u8Size, AT_TIMEOUT_MAX) == HAL_OK)
-   {
-      g_fpCallback = p_fpCallback;
-      g_u8WaitingReplyAT = 1;
-      itsdk_stimer_register(AT_TIMEOUT_MAX,vATTimeOutHandler,0,TIMER_ACCEPT_LOWPOWER);
-   }
+   //Generate interrupt when receive a char on uart2
+	if (HAL_UART_Receive_IT(&huart2, &g_u8UartRxChar, 1) == HAL_OK)
+	{
+		if(HAL_UART_Transmit(&huart2, l_au8Buffer, l_u8Size, AT_TIMEOUT_MIN) == HAL_OK)
+		{
+			l_u8UartError = 0u;
+			g_fpCallback = p_fpCallback;
+			g_u8WaitingReplyAT = 1;
+			itsdk_stimer_register(AT_TIMEOUT_MIN,vATTimeOutHandler,0,TIMER_ACCEPT_LOWPOWER);
+
+			//Blocking mode until response or timeout
+			while ((g_u8WaitingReplyAT == 1u) || (g_u8MultipleReply != 0u))
+			{
+					vAT_MessageProcess();
+			}
+		}
+	}
+
+	if (l_u8UartError != 0u)
+	{
+			log_info("UART ERROR\n");
+	}
 }
 
-/**@brief Manage message in queue.
+/**@brief Manage messages.
  * @return None.
  */
 void vAT_MessageProcess(void)
@@ -125,7 +139,7 @@ void vAT_MessageProcess(void)
 
          if((*g_fpCallback) != NULL)
          {
-            (*g_fpCallback)(AT_RET_END, g_au8ATBuffer, g_u8RxIdx);
+            (*g_fpCallback)(AT_RET_OK, g_au8ATBuffer, g_u8RxIdx);
          }
          memset(g_au8ATBuffer, 0u, AT_RX_BUFFER_SIZE);
          g_u8MsgReceived--;
@@ -182,6 +196,19 @@ void vAT_ClearPending(void)
    g_u8MultipleReply = 0u;
    g_u8WaitingReplyAT = 0u;
 }
+
+
+/**
+  * @brief  Rx Transfer completed callback.
+  * @param  huart UART handle.
+  * @retval None
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	vAT_UpdateFrame(g_u8UartRxChar);
+	HAL_UART_Receive_IT(&huart2, &g_u8UartRxChar, 1);
+}
+
 /****************************************************************************************
  * Private functions
  ****************************************************************************************/
