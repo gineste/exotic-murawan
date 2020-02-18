@@ -218,11 +218,13 @@
 // +-------------MURATA------------|--------------------------------------|---------------------------------------|
 
 #define ITSDK_MURATA_ANTSW_RX_BANK 	     __BANK_A						   // MURATE ANTENNA SWITCH RX
-#define ITSDK_MURATE_ANTSW_RX_PIN	     __LP_GPIO_1
+#define ITSDK_MURATA_ANTSW_RX_PIN	     __LP_GPIO_1
 #define ITSDK_MURATA_ANTSW_TXBOOST_BANK  __BANK_C						   // MURATA TX POWER BOOST
-#define ITSDK_MURATE_ANTSW_TXBOOST_PIN	 __LP_GPIO_1
+#define ITSDK_MURATA_ANTSW_TXBOOST_PIN	 __LP_GPIO_1
 #define ITSDK_MURATA_ANTSW_TXRFO_BANK    __BANK_C						   // MURATA TX RFO
-#define ITSDK_MURATE_ANTSW_TXRFO_PIN	 __LP_GPIO_2
+#define ITSDK_MURATA_ANTSW_TXRFO_PIN	 __LP_GPIO_2
+
+#define ITSDK_MURATA_WAKEUP_TIME    53 									   // WakeUp time correction for RX window start at least TCXO Time [ms]
 
 
 #endif //__LORAWAN_SX1276

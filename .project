@@ -26,9 +26,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>ItSdk</name>
+			<name>stm32-it-sdk</name>
 			<type>2</type>
-			<location>C:/Users/paul/Documents/STM32/ItSdk</location>
+			<location>C:/Projects/03-Git/stm32-it-sdk</location>
 		</link>
 	</linkedResources>
 </projectDescription>

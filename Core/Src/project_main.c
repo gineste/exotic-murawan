@@ -42,28 +42,76 @@
 #include <murawan/radio.h>
 #include <murawan/machine.h>
 
+#include <super-tracker/AT.h>
+
+uint8_t ATI[] = "ATI";
+uint8_t g_u8UartRxChar = '\0';
+
+void vCallback_OnDemand(e_AT_RetVal_t p_eResult, uint8_t * p_pu8Buffer, uint8_t p_u8Size)
+{
+   switch(p_eResult)
+   {
+      case AT_RET_END:
+      	//log_info("Response = %s\n",p_pu8Buffer);
+         break;
+      case AT_RET_TIMEOUT:
+      	//log_info("BG96 Timeout\n");
+			break;
+      default:
+      	//log_info("%s\n","FAIL TO SEND ON DEMAND MSG BG96");
+      break;
+   }
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	vAT_UpdateFrame(g_u8UartRxChar);
+	HAL_UART_Receive_IT(&huart2, &g_u8UartRxChar, 1);
+}
+
 /**
  * Process the state machine on regular basis
  */
 extern machine_t murawan_stm;
-void task() {
-	statem(&murawan_stm);
+void
+task ()
+{
+	statem (&murawan_stm);
 }
 
 /**
  * On Reset setup
  */
-void project_setup() {
-	log_info("Booting !!\r\n");
-	murawan_state.lastResetCause = itsdk_getResetCause();
-	itdt_sched_registerSched(MURAWAN_CONFIG_TIME_BASE_S*1000,ITSDK_SCHED_CONF_IMMEDIATE, &task);
+void
+project_setup ()
+{
+	//log_info ("Booting !!\r\n");
+
+	/* Try BG96 AT commands here */
+	if (HAL_UART_Receive_IT(&huart2, &g_u8UartRxChar, 1) != HAL_OK)
+	{
+			log_info("Hal uart receive IT ERROR !\r\n");
+	}
+
+	vAT_DirectSend(ATI, strlen(ATI), vCallback_OnDemand);
+
+	while (1)
+	{
+			vAT_MessageProcess();
+	}
+
+	murawan_state.lastResetCause = itsdk_getResetCause ();
+	itdt_sched_registerSched (MURAWAN_CONFIG_TIME_BASE_S * 1000,
+									  ITSDK_SCHED_CONF_IMMEDIATE, &task);
 }
 
 /**
  * LowPower loop
  */
-void project_loop() {
-	st25dv_process();
-	itsdk_lorawan_loop();
+void
+project_loop ()
+{
+	st25dv_process ();
+	itsdk_lorawan_loop ();
 }
 
