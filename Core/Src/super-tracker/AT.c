@@ -109,9 +109,13 @@ void vAT_DirectSend(uint8_t * p_pu8Msg, uint8_t p_u8Size, fp_vATCallback_t p_fpC
 		}
 	}
 
-	if (l_u8UartError != 0u)
+	if (l_u8UartError == 0u)
 	{
-			log_info("UART ERROR\n");
+		HAL_UART_AbortReceive_IT(&huart2);
+	}
+	else
+	{
+		log_info("UART ERROR\n");
 	}
 }
 

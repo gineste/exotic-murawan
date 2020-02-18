@@ -63,7 +63,7 @@ project_setup ()
 	//log_info ("Booting !!\r\n");
 
 	/* setup cellular connexion */
-	vCellular_Disconnect();
+	vCellular_Connect();
 
 	murawan_state.lastResetCause = itsdk_getResetCause ();
 	itdt_sched_registerSched (MURAWAN_CONFIG_TIME_BASE_S * 1000,
