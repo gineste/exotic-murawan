@@ -1,4 +1,4 @@
-/* 
+/*
  *    ____  _  _   __   ____   __    ___    ____  _  _  ____  ____  ____  _  _  ____
  *   (  __)( \/ ) /  \ (_  _) (  )  / __)  / ___)( \/ )/ ___)(_  _)(  __)( \/ )/ ___)
  *    ) _)  )  ( (  O )  )(    )(  ( (__   \___ \ )  / \___ \  )(   ) _) / \/ \\___ \     
@@ -9,43 +9,59 @@
  * Licensees are granted free, non-transferable use of the information. NO WARRANTY 
  * of ANY KIND is provided. This heading must NOT be removed from the file.
  *
+ * Date:          18 févr. 2020
+ * Author:        Martin
+ * Description:   File description.
+ *
  */
-#ifndef INC_SUPER_TRACKER_BG96_H_
-#define INC_SUPER_TRACKER_BG96_H_
 
 /****************************************************************************************
  * Include Files
  ****************************************************************************************/
-#include <stdint.h>
-#include "super-tracker/AT.h"
-
+#include "super-tracker/tools.h"
 /****************************************************************************************
  * Defines
  ****************************************************************************************/
 
 /****************************************************************************************
- * Type definitions
+ * Private type declarations
  ****************************************************************************************/
-typedef enum _BG96_ERR_CODE_{
-	BG96_ERROR_NONE,
-   BG96_ERROR_PARAM,
-	BG96_ERROR_SUCCEED,
-	BG96_ERROR_FAILED,
-	BG96_ERROR_TIMEOUT,
-} e_BG96_ErrorCode_t;
-
-typedef fp_vATCallback_t fp_BG96Callback_t;
 
 /****************************************************************************************
- * Public function declarations
+ * Private function declarations
  ****************************************************************************************/
-/**@brief      Send Command to BG96.
- * @param[in]  p_eCmd : Command.
- * @param[in]  p_pu8Bytes : Data to send.
- * @param[in]  p_u8Size : Size of message.
- * @param[in]  p_pfpCallback : Callback.
- * @return Error Code.
- */
-e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t p_u8Size, fp_BG96Callback_t p_pfpCallback);
 
-#endif /* INC_SUPER_TRACKER_BG96_H_ */
+/****************************************************************************************
+ * Variable declarations
+ ****************************************************************************************/ 
+
+/****************************************************************************************
+ * Public functions
+ ****************************************************************************************/ 
+uint8_t u8Tools_isStringInBuffer(uint8_t * p_pu8Buffer, uint8_t * p_pu8String)
+{
+	uint8_t l_u8isStringInBuffer = 0u;
+
+	if (p_pu8String != NULL
+		 && p_pu8Buffer != NULL)
+	{
+		if (strstr(p_pu8Buffer, p_pu8String) != NULL)
+		{
+			l_u8isStringInBuffer = 1u;
+		}
+	}
+
+	return l_u8isStringInBuffer;
+}
+
+/****************************************************************************************
+ * Private functions
+ ****************************************************************************************/
+
+/****************************************************************************************
+ * End Of File
+ ****************************************************************************************/
+
+
+
+

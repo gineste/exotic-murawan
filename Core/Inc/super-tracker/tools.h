@@ -10,14 +10,14 @@
  * of ANY KIND is provided. This heading must NOT be removed from the file.
  *
  */
-#ifndef INC_SUPER_TRACKER_BG96_H_
-#define INC_SUPER_TRACKER_BG96_H_
+#ifndef INC_SUPER_TRACKER_TOOLS_H_
+#define INC_SUPER_TRACKER_TOOLS_H_
 
 /****************************************************************************************
  * Include Files
  ****************************************************************************************/
+#include <string.h>
 #include <stdint.h>
-#include "super-tracker/AT.h"
 
 /****************************************************************************************
  * Defines
@@ -26,26 +26,15 @@
 /****************************************************************************************
  * Type definitions
  ****************************************************************************************/
-typedef enum _BG96_ERR_CODE_{
-	BG96_ERROR_NONE,
-   BG96_ERROR_PARAM,
-	BG96_ERROR_SUCCEED,
-	BG96_ERROR_FAILED,
-	BG96_ERROR_TIMEOUT,
-} e_BG96_ErrorCode_t;
-
-typedef fp_vATCallback_t fp_BG96Callback_t;
 
 /****************************************************************************************
  * Public function declarations
  ****************************************************************************************/
-/**@brief      Send Command to BG96.
- * @param[in]  p_eCmd : Command.
- * @param[in]  p_pu8Bytes : Data to send.
- * @param[in]  p_u8Size : Size of message.
- * @param[in]  p_pfpCallback : Callback.
- * @return Error Code.
+/**@brief      Check if a string is present in a buffer.
+ * @param[in]  p_pu8Buffer : This is the main C string to be scanned.
+ * @param[in]  p_pu8String : This is the small string to be searched with-in haystack string.
+ * @return 1 if present, 0 if not.
  */
-e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t p_u8Size, fp_BG96Callback_t p_pfpCallback);
+uint8_t u8Tools_isStringInBuffer(uint8_t * p_pu8Buffer, uint8_t * p_pu8String);
 
-#endif /* INC_SUPER_TRACKER_BG96_H_ */
+#endif /* INC_SUPER_TRACKER_TOOLS_H_ */
