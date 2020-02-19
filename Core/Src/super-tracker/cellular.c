@@ -98,21 +98,23 @@ void vCellular_Connect(void)
 		eBG96_SendCommand("AT+QGPSCFG=\"gpsnmeatype\",1", strlen("AT+QGPSCFG=\"gpsnmeatype\",1"), vCallback_OnDemand);
 			//RUI_LOG_PRINTF("Fail to config GPS NMEATYPE GGA");
 	}*/
+	eBG96_SendCommand("ATE0", 0, l_au8ATRespBuffer);
 
-	eBG96_SendCommand("AT+COPS=2", l_au8ATRespBuffer);
+	eBG96_SendCommand("AT+COPS=2", 0, l_au8ATRespBuffer);
 
 	// Connect with Orange
-	eBG96_SendCommand("AT+COPS=1,0,\"Orange F\",0", l_au8ATRespBuffer);
+	eBG96_SendCommand("AT+COPS=1,0,\"Orange F\",0", 0, l_au8ATRespBuffer);
 	// Connect with best operator
 	//eBG96_SendCommand("AT+COPS=0", strlen("AT+COPS=0"), vCallback_OnDemand);
 
 	// Check for cellular network
 	l_u8WaitRegistrationRetry = 0u;
 
+	wdg_refresh();
 	do
 	{
 		++l_u8WaitRegistrationRetry;
-		l_u8ErrorCode = eBG96_SendCommand("AT+CGATT?", l_au8ATRespBuffer);
+		l_u8ErrorCode = eBG96_SendCommand("AT+CGATT?", 0, l_au8ATRespBuffer);
 
 		if (l_u8ErrorCode == BG96_ERROR_NONE)
 		{
@@ -124,27 +126,28 @@ void vCellular_Connect(void)
 	while ((l_u8WaitRegistrationRetry < 100) && (l_u8Registered != 1u));
 
 	// Launch connection
-	eBG96_SendCommand("AT+COPS?", l_au8ATRespBuffer);
+	eBG96_SendCommand("AT+COPS?", 0, l_au8ATRespBuffer);
 
 	// Set APN
-	eBG96_SendCommand("AT+QICSGP=1,1,\"NXT17.NET\",\"\",\"\",1", l_au8ATRespBuffer);
+	eBG96_SendCommand("AT+QICSGP=1,1,\"NXT17.NET\",\"\",\"\",1", 0, l_au8ATRespBuffer);
 
 	//Active PDP context
-	eBG96_SendCommand("AT+QIACT=1", l_au8ATRespBuffer);
+	eBG96_SendCommand("AT+QIACT=1", 0, l_au8ATRespBuffer);
 
 	// Check for PDP context activated
 	l_u8WaitRegistrationRetry = 0u;
+	wdg_refresh();
 	do
 	{
 		++l_u8WaitRegistrationRetry;
-		l_u8ErrorCode = eBG96_SendCommand("AT+QIACT?", l_au8ATRespBuffer);
+		l_u8ErrorCode = eBG96_SendCommand("AT+QIACT?", 0, l_au8ATRespBuffer);
 
 		if (l_u8ErrorCode == BG96_ERROR_NONE)
 		{
 			l_u8Connected = u8Tools_isStringInBuffer(l_au8ATRespBuffer, "+QIACT: 1");
 		}
 		itsdk_delayMs(1000);
-	}while((l_u8WaitRegistrationRetry < 100) && (l_u8Connected != AT_RET_OK));
+	}while((l_u8WaitRegistrationRetry < 100) && (l_u8Connected != 1u));
 }
 
 

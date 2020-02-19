@@ -45,7 +45,7 @@ typedef void (*fp_vATCallback_t)(e_AT_RetVal_t p_eRet, uint8_t * p_pu8Buffer, ui
 /****************************************************************************************
  * Public function declarations
  ****************************************************************************************/
-void vAT_Send(uint8_t * p_pu8Msg, fp_vATCallback_t p_fpCallback);
+void vAT_Send(uint8_t * p_pu8Msg, uint8_t p_u8WaitAsyncResp, fp_vATCallback_t p_fpCallback);
 void vAT_MessageProcess(void);
 void vAT_UpdateFrame(const uint8_t p_u8Data);
 uint8_t u8AT_PendingCommand(void);

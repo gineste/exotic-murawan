@@ -34,8 +34,7 @@
 #define AT_TIMEOUT_MIN     (uint32_t)10000u
 #define AT_TIMEOUT_MAX     (uint32_t)60000u
 
-#define AT_END_OF_FRAME    "OK\r\n"
-#define AT_EOF_SIZE        (uint8_t)4u //sizeof(AT_END_OF_FRAME)
+#define AT_EOF_SIZE        (uint8_t)2u
 
 #define PREFIX_MSG         "AT"
 #define PREFIX_MSG_SIZE    (uint8_t)sizeof(PREFIX_MSG)+4u
@@ -65,7 +64,7 @@ volatile uint8_t g_u8RxIdx = 0u;
 volatile uint8_t g_u8EOFIdx = 0u;
 
 static uint8_t g_au8ATBuffer[AT_RX_BUFFER_SIZE] = { 0u };
-static uint8_t g_au8ATEndOfFrame[AT_EOF_SIZE] = { 'O', 'K', '\r', '\n' }; //AT_END_OF_FRAME;
+static uint8_t g_au8ATEndOfFrame[AT_EOF_SIZE] = {'\r', '\n' }; //AT_END_OF_FRAME;
 static fp_vATCallback_t g_fpCallback;
 
 static uint8_t g_u8UartRxChar = '\0';
@@ -80,7 +79,7 @@ static uint8_t g_u8UartRxChar = '\0';
  * @param [in/out] p_fpCallback  : Callback for response
  * @return None
  */
-void vAT_Send(uint8_t * p_pu8Msg, fp_vATCallback_t p_fpCallback)
+void vAT_Send(uint8_t * p_pu8Msg, uint8_t p_u8WaitAsyncResp, fp_vATCallback_t p_fpCallback)
 {
    uint8_t l_au8Buffer[MAX_SIZE_MSG] = { 0u };
    uint8_t l_u8Size = strlen(p_pu8Msg);
@@ -93,23 +92,37 @@ void vAT_Send(uint8_t * p_pu8Msg, fp_vATCallback_t p_fpCallback)
    //Generate interrupt when receive a char on uart2
 	if (HAL_UART_Receive_IT(&huart2, &g_u8UartRxChar, 1) == HAL_OK)
 	{
-		if(HAL_UART_Transmit(&huart2, l_au8Buffer, l_u8Size, AT_TIMEOUT_MIN) == HAL_OK)
+		/* Clear Cursor and buffer */
+		/* Init Cursor Rx Buffer Idx */
+      g_u8RxIdx = 0u;
+      g_u8EOFIdx = 0u;
+      memset(g_au8ATBuffer, 0u, AT_RX_BUFFER_SIZE);
+
+		if(HAL_UART_Transmit(&huart2, l_au8Buffer, l_u8Size, AT_TIMEOUT_MAX) == HAL_OK)
 		{
 			l_u8UartError = 0u;
 			g_fpCallback = p_fpCallback;
-			g_u8WaitingReplyAT = 1;
-			itsdk_stimer_register(AT_TIMEOUT_MIN,vATTimeOutHandler,0,TIMER_ACCEPT_LOWPOWER);
+			g_u8WaitingReplyAT = 1u;
+
+			if (p_u8WaitAsyncResp)
+			{
+				g_u8MultipleReply = 3u;
+			}
+			else
+			{
+				g_u8MultipleReply = 0u;	//TO REFACTOR
+			}
+
+			itsdk_stimer_register(AT_TIMEOUT_MAX,vATTimeOutHandler,0,TIMER_ACCEPT_LOWPOWER);
 
 			//Blocking mode until response or timeout
 			while ((g_u8WaitingReplyAT == 1u) || (g_u8MultipleReply != 0u))
 			{
 					vAT_MessageProcess();
+					wdg_refresh();
 			}
 		}
-	}
 
-	if (l_u8UartError == 0u)
-	{
 		HAL_UART_AbortReceive_IT(&huart2);
 	}
 	else
@@ -132,20 +145,22 @@ void vAT_MessageProcess(void)
          if(g_u8MultipleReply != 0u)
          {
             g_u8MultipleReply--;
+            g_u8MsgReceived = 0u;
          }
          else
          {
-         	itsdk_stimer_stop(vATTimeOutHandler,0);
+            if (u8Tools_isStringInBuffer(g_au8ATBuffer, "OK"))
+            {
+            	itsdk_stimer_stop(vATTimeOutHandler,0);
+            	g_u8WaitingReplyAT = 0u;
+            	g_u8MsgReceived = 0u;
 
-         	g_u8WaitingReplyAT = 0u;
+   				if((*g_fpCallback) != NULL)
+   				{
+   					(*g_fpCallback)(AT_RET_OK, g_au8ATBuffer, g_u8RxIdx);
+   				}
+            }
          }
-
-         if((*g_fpCallback) != NULL)
-         {
-            (*g_fpCallback)(AT_RET_OK, g_au8ATBuffer, g_u8RxIdx);
-         }
-         memset(g_au8ATBuffer, 0u, AT_RX_BUFFER_SIZE);
-         g_u8MsgReceived--;
       }
       else
       {  /* Still pending transfer (Wait for reply or Timeout */  }
@@ -168,7 +183,10 @@ void vAT_UpdateFrame(const uint8_t p_u8Data)
       g_u8EOFIdx++;
       if(g_u8EOFIdx >= AT_EOF_SIZE)
       {
-         g_u8MsgReceived++;
+      	if (g_u8RxIdx > 2)
+      	{
+      		g_u8MsgReceived++;
+      	}
          g_u8EOFIdx = 0u;
       }
    }

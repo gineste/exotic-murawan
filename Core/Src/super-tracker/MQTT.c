@@ -18,11 +18,15 @@
 /****************************************************************************************
  * Include Files
  ****************************************************************************************/
+#include "super-tracker/BG96.h"
+#include "super-tracker/tools.h"
+
 #include "super-tracker/MQTT.h"
 
 /****************************************************************************************
  * Defines
  ****************************************************************************************/
+#define TOKEN "3mWgy02uvYLaHfAcNKu6"
 
 /****************************************************************************************
  * Private type declarations
@@ -39,41 +43,57 @@
 /****************************************************************************************
  * Public functions
  ****************************************************************************************/ 
-/*void vMQTT_send(uint8_t * p_au8Payload)
+e_BG96_ErrorCode_t vMQTT_send(uint8_t * p_au8Payload)
 {
    uint8_t CTRL_Z[] = { 26 };
    uint8_t token_buffer[100] = {0};
    uint8_t l_u8Open = 0u;
+   uint8_t l_u8Connect = 0u;
+   uint8_t l_u8PublishedHalf = 0u;
+   uint8_t l_u8PublishedCmplt = 0u;
+   e_BG96_ErrorCode_t l_u8ErrorCode = BG96_ERROR_FAILED;
+   uint8_t l_au8ATRespBuffer[BG96_RESP_SIZE_MAX] = {0};
 
-   eBG96_SendCommand("AT+QMTOPEN=1,\"34.247.165.143\",1883", "+QMTOPEN: 1,0", true, 10000);
+   wdg_refresh();
 
-	if (g_u8ATretVal == AT_RET_OK)
+   l_u8ErrorCode = eBG96_SendCommand("AT+QMTOPEN=1,\"34.247.165.143\",1883", 1, l_au8ATRespBuffer);
+
+	if (l_u8ErrorCode == BG96_ERROR_NONE)
 	{
-		l_u8Open = u8Tools_isStringInBuffer(g_au8ATRespBuffer, "+QMTOPEN: 1,0");
-		g_u8ATretVal = AT_RET_ERROR;
-	}
+		//eBG96_SendCommand("AT+QMTOPEN?", l_au8ATRespBuffer);
 
-	if(l_eRuiStatus == RUI_STATUS_OK)
-	{
-		sprintf(token_buffer, "AT+QMTCONN=1,\"34.247.165.143\",\"%s\"", g_u8Token);
-   	eBG96_sendBG96Command(token_buffer, "+QMTCONN: 1,0", true, 10000);
+		l_u8Open = u8Tools_isStringInBuffer(l_au8ATRespBuffer, "+QMTOPEN: 1,0");
 
-		if(l_eRuiStatus == RUI_STATUS_OK)
+		if(l_u8Open)
 		{
-			l_eRuiStatus = eBG96_SendCommand("AT+QMTPUB=1,0,0,0,\"v1/devices/me/telemetry\"", ">", false, 10000);
+			sprintf(token_buffer, "AT+QMTCONN=1,\"34.247.165.143\",\"%s\"", TOKEN);
+			l_u8ErrorCode = eBG96_SendCommand(token_buffer, 1, l_au8ATRespBuffer);
 
-			if(l_eRuiStatus == RUI_STATUS_OK)
+			if (l_u8ErrorCode == BG96_ERROR_NONE)
 			{
-				eBG96_SendCommand(payload, "+QMTPUB: 1,0,0", false, 10000);
-				//rui_cellular_send(CTRL_Z);
-			}
+				l_u8Connect = u8Tools_isStringInBuffer(l_au8ATRespBuffer, "+QMTCONN: 1,0");
 
-			l_eRuiStatus = eBG96_SendCommand("AT+QMTDISC=1", "+QMTDISC: 1,0", true, 10000);
+				if(l_u8Connect)
+				{
+					l_u8ErrorCode = eBG96_SendCommand("AT+QMTPUB=1,0,0,0,\"v1/devices/me/telemetry\"", 1, l_au8ATRespBuffer);
+
+					l_u8PublishedHalf = u8Tools_isStringInBuffer(l_au8ATRespBuffer, ">");
+
+					if(l_u8PublishedHalf)
+					{
+						l_u8ErrorCode = eBG96_SendCommand(p_au8Payload, 1, l_au8ATRespBuffer);
+
+						l_u8PublishedCmplt = u8Tools_isStringInBuffer(l_au8ATRespBuffer, "+QMTPUB: 1,0,0");
+					}
+
+					eBG96_SendCommand("AT+QMTDISC=1", 1, l_au8ATRespBuffer);
+				}
+			}
 		}
 	}
 
-	return l_eRuiStatus;
-}*/
+	return l_u8ErrorCode;
+}
 
 /****************************************************************************************
  * Private functions

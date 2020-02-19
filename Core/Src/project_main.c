@@ -43,6 +43,20 @@
 #include <murawan/machine.h>
 
 #include <super-tracker/cellular.h>
+#include <super-tracker/MQTT.h>
+
+static void vCreateJsonFrame(float latitude, float longitude, float battery, float temperature, float humidity, uint8_t payload[])
+{
+    memset(payload,0,256);
+
+    sprintf(payload,"{\n\t\"latitude\": %f,\n"
+        "\t\"longitude\": %f,\n"
+        "\t\"battery\": %.2f,\n"
+        "\t\"temperature\": %.2f,\n"
+        "\t\"humidity\": %.2f\n"
+        "}\n%c",
+        latitude, longitude, battery, temperature, humidity, (char) 26);
+}
 
 /**
  * Process the state machine on regular basis
@@ -63,7 +77,10 @@ project_setup ()
 	//log_info ("Booting !!\r\n");
 
 	/* setup cellular connexion */
+	uint8_t send_data[256] = {0};
 	vCellular_Connect();
+	vCreateJsonFrame(63.23361814088533, 4.6292071962105235, 4.0, 10, 42.42, send_data);
+	vMQTT_send(send_data);
 
 	murawan_state.lastResetCause = itsdk_getResetCause ();
 	itdt_sched_registerSched (MURAWAN_CONFIG_TIME_BASE_S * 1000,

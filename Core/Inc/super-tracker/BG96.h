@@ -45,6 +45,6 @@ typedef fp_vATCallback_t fp_BG96Callback_t;
  * @param[in/out]  p_au8Buffer : Buffer to store the response.
  * @return Error Code.
  */
-e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t * p_au8Buffer);
+e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t p_u8WaitAsyncResp, uint8_t * p_au8Buffer);
 
 #endif /* INC_SUPER_TRACKER_BG96_H_ */
