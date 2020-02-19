@@ -10,41 +10,25 @@
  * of ANY KIND is provided. This heading must NOT be removed from the file.
  *
  */
-#ifndef INC_SUPER_TRACKER_BG96_H_
-#define INC_SUPER_TRACKER_BG96_H_
+#ifndef INC_SUPER_TRACKER_MQTT_H_
+#define INC_SUPER_TRACKER_MQTT_H_
 
 /****************************************************************************************
  * Include Files
  ****************************************************************************************/
 #include <stdint.h>
-#include "super-tracker/AT.h"
 
 /****************************************************************************************
  * Defines
  ****************************************************************************************/
-#define BG96_RESP_SIZE_MAX	255
 
 /****************************************************************************************
  * Type definitions
  ****************************************************************************************/
-typedef enum _BG96_ERR_CODE_{
-	BG96_ERROR_NONE,
-   BG96_ERROR_PARAM,
-	BG96_ERROR_SUCCEED,
-	BG96_ERROR_FAILED,
-	BG96_ERROR_TIMEOUT,
-} e_BG96_ErrorCode_t;
-
-typedef fp_vATCallback_t fp_BG96Callback_t;
 
 /****************************************************************************************
  * Public function declarations
  ****************************************************************************************/
-/**@brief      Send Command to BG96.
- * @param[in]  p_eCmd : Command.
- * @param[in/out]  p_au8Buffer : Buffer to store the response.
- * @return Error Code.
- */
-e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t * p_au8Buffer);
+void vMQTT_send(uint8_t * p_au8Payload);
 
-#endif /* INC_SUPER_TRACKER_BG96_H_ */
+#endif /* INC_SUPER_TRACKER_MQTT_H_ */

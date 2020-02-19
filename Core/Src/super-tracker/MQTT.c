@@ -9,19 +9,17 @@
  * Licensees are granted free, non-transferable use of the information. NO WARRANTY 
  * of ANY KIND is provided. This heading must NOT be removed from the file.
  *
- * Date:          18 févr. 2020
+ * Date:          19 févr. 2020
  * Author:        Martin
- * Description:   BG96 drivers.
+ * Description:   File description.
  *
  */
 
 /****************************************************************************************
  * Include Files
  ****************************************************************************************/
-#include <stdint.h>
-#include <string.h>
+#include "super-tracker/MQTT.h"
 
-#include "super-tracker/BG96.h"
 /****************************************************************************************
  * Defines
  ****************************************************************************************/
@@ -33,72 +31,53 @@
 /****************************************************************************************
  * Private function declarations
  ****************************************************************************************/
-static void vCallback_OnDemand(e_AT_RetVal_t p_eResult, uint8_t * p_pu8Buffer, uint8_t p_u8Size);
 
 /****************************************************************************************
  * Variable declarations
  ****************************************************************************************/ 
-uint8_t g_u8ATretVal = AT_RET_ERROR;
-uint8_t g_au8ATRespBuffer[BG96_RESP_SIZE_MAX] = {0};
 
 /****************************************************************************************
  * Public functions
  ****************************************************************************************/ 
-/**@brief      Send Command to BG96.
- * @param[in]  p_eCmd : Command.
- * @param[in/out]  p_au8Buffer : Buffer to store the response.
- * @return Error Code.
- */
-e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t * p_au8Buffer)
+/*void vMQTT_send(uint8_t * p_au8Payload)
 {
-   e_BG96_ErrorCode_t l_eErrCode = BG96_ERROR_PARAM;
-   uint8_t l_u8ATRespSize = 0u;
+   uint8_t CTRL_Z[] = { 26 };
+   uint8_t token_buffer[100] = {0};
+   uint8_t l_u8Open = 0u;
 
-   if (p_au8Buffer != NULL
-   		&& p_au8Cmd != NULL)
-   {
-		vAT_Send(p_au8Cmd, (fp_vATCallback_t)vCallback_OnDemand);
+   eBG96_SendCommand("AT+QMTOPEN=1,\"34.247.165.143\",1883", "+QMTOPEN: 1,0", true, 10000);
 
-		if (g_u8ATretVal == AT_RET_OK)
-		{
-			l_eErrCode = BG96_ERROR_NONE;
-			l_u8ATRespSize = strlen(g_au8ATRespBuffer);
-			memcpy(p_au8Buffer, g_au8ATRespBuffer, l_u8ATRespSize);
-		}
-		else if (g_u8ATretVal == AT_RET_TIMEOUT)
-		{
-			l_eErrCode = BG96_ERROR_TIMEOUT;
-		}
-		else
-		{
-			l_eErrCode = BG96_ERROR_FAILED;
-		}
-   }
+	if (g_u8ATretVal == AT_RET_OK)
+	{
+		l_u8Open = u8Tools_isStringInBuffer(g_au8ATRespBuffer, "+QMTOPEN: 1,0");
+		g_u8ATretVal = AT_RET_ERROR;
+	}
 
-	return l_eErrCode;
-}
+	if(l_eRuiStatus == RUI_STATUS_OK)
+	{
+		sprintf(token_buffer, "AT+QMTCONN=1,\"34.247.165.143\",\"%s\"", g_u8Token);
+   	eBG96_sendBG96Command(token_buffer, "+QMTCONN: 1,0", true, 10000);
+
+		if(l_eRuiStatus == RUI_STATUS_OK)
+		{
+			l_eRuiStatus = eBG96_SendCommand("AT+QMTPUB=1,0,0,0,\"v1/devices/me/telemetry\"", ">", false, 10000);
+
+			if(l_eRuiStatus == RUI_STATUS_OK)
+			{
+				eBG96_SendCommand(payload, "+QMTPUB: 1,0,0", false, 10000);
+				//rui_cellular_send(CTRL_Z);
+			}
+
+			l_eRuiStatus = eBG96_SendCommand("AT+QMTDISC=1", "+QMTDISC: 1,0", true, 10000);
+		}
+	}
+
+	return l_eRuiStatus;
+}*/
 
 /****************************************************************************************
  * Private functions
  ****************************************************************************************/
-void vCallback_OnDemand(e_AT_RetVal_t p_eResult, uint8_t * p_pu8Buffer, uint8_t p_u8Size)
-{
-	g_u8ATretVal = p_eResult;
-	memset(g_au8ATRespBuffer, 0u, BG96_RESP_SIZE_MAX);
-   switch(p_eResult)
-   {
-      case AT_RET_OK:
-         //log_info("SEND MSG TO BG96 SUCCESS\n");
-			memcpy(g_au8ATRespBuffer, p_pu8Buffer, p_u8Size);
-         break;
-      case AT_RET_TIMEOUT:
-			log_info("SEND MSG TO BG96 TIMEOUT\n");
-			break;
-      default:
-          log_info("FAIL TO SEND MSG TO BG96\n");
-      break;
-   }
-}
 
 /****************************************************************************************
  * End Of File

@@ -80,14 +80,13 @@ static uint8_t g_u8UartRxChar = '\0';
  * @param [in/out] p_fpCallback  : Callback for response
  * @return None
  */
-void vAT_DirectSend(uint8_t * p_pu8Msg, uint8_t p_u8Size, fp_vATCallback_t p_fpCallback)
+void vAT_Send(uint8_t * p_pu8Msg, fp_vATCallback_t p_fpCallback)
 {
    uint8_t l_au8Buffer[MAX_SIZE_MSG] = { 0u };
-   uint8_t l_u8Size = 0u;
+   uint8_t l_u8Size = strlen(p_pu8Msg);
    uint8_t l_u8UartError = 1u;
 
-   memcpy(l_au8Buffer, p_pu8Msg, p_u8Size);
-   l_u8Size = p_u8Size;
+   memcpy(l_au8Buffer, p_pu8Msg, l_u8Size);
    // End of frame with one of any kind of whitespace (space,tab,newline,etc.)
    l_au8Buffer[l_u8Size++] = '\r';       //Increase index for Uart Length
 

@@ -44,7 +44,6 @@
 /****************************************************************************************
  * Private function declarations
  ****************************************************************************************/
-static void vCallback_OnDemand(e_AT_RetVal_t p_eResult, uint8_t * p_pu8Buffer, uint8_t p_u8Size);
 
 /****************************************************************************************
  * Variable declarations
@@ -56,25 +55,19 @@ static const uint8_t g_cau8Cmd[CELL_CMD_MAX][CELL_PREFIX_CMD_SIZE_MAX] = {
    { "AT+CGATT?" }   // Check if connected
 };
 
-uint8_t g_u8ATretVal = AT_RET_ERROR;
-uint8_t g_au8ATRespBuffer[CELL_CMD_RESP_SIZE_MAX] = {0};
-
 /****************************************************************************************
  * Public functions
  ****************************************************************************************/ 
-/**@brief Disconnect from network.
+/**@brief Connect to cellular network.
  * @return Error code
  */
-void vCellular_Disconnect(void)
-{
-	eBG96_SendCommand(g_cau8Cmd[CELL_CMD_DISC], strlen(g_cau8Cmd[CELL_CMD_DISC]), vCallback_OnDemand);
-}
-
 void vCellular_Connect(void)
 {
 	uint8_t l_u8WaitRegistrationRetry = 0u;
 	uint8_t l_u8Registered = 0u;
 	uint8_t l_u8Connected = 0u;
+	uint8_t l_au8ATRespBuffer[BG96_RESP_SIZE_MAX] = {0};
+	e_BG96_ErrorCode_t l_u8ErrorCode = BG96_ERROR_FAILED;
 
 	// Automatic search sequence : LTEM -> LTENB -> GSM
 	//eBG96_sendBG96Command("AT+QCFG=\"nwscanseq\",00", true);
@@ -106,10 +99,10 @@ void vCellular_Connect(void)
 			//RUI_LOG_PRINTF("Fail to config GPS NMEATYPE GGA");
 	}*/
 
-	eBG96_SendCommand("AT+COPS=2", strlen("AT+COPS=2"), vCallback_OnDemand);
+	eBG96_SendCommand("AT+COPS=2", l_au8ATRespBuffer);
 
 	// Connect with Orange
-	eBG96_SendCommand("AT+COPS=1,0,\"Orange F\",0", strlen("AT+COPS=1,0,\"Orange F\",0"), vCallback_OnDemand);
+	eBG96_SendCommand("AT+COPS=1,0,\"Orange F\",0", l_au8ATRespBuffer);
 	// Connect with best operator
 	//eBG96_SendCommand("AT+COPS=0", strlen("AT+COPS=0"), vCallback_OnDemand);
 
@@ -119,12 +112,11 @@ void vCellular_Connect(void)
 	do
 	{
 		++l_u8WaitRegistrationRetry;
-		eBG96_SendCommand("AT+CGATT?", strlen("AT+CGATT?"), vCallback_OnDemand);
+		l_u8ErrorCode = eBG96_SendCommand("AT+CGATT?", l_au8ATRespBuffer);
 
-		if (g_u8ATretVal == AT_RET_OK)
+		if (l_u8ErrorCode == BG96_ERROR_NONE)
 		{
-			l_u8Registered = u8Tools_isStringInBuffer(g_au8ATRespBuffer, "+CGATT: 1");
-			g_u8ATretVal = AT_RET_ERROR;
+			l_u8Registered = u8Tools_isStringInBuffer(l_au8ATRespBuffer, "+CGATT: 1");
 		}
 
 		itsdk_delayMs(1000);
@@ -132,25 +124,24 @@ void vCellular_Connect(void)
 	while ((l_u8WaitRegistrationRetry < 100) && (l_u8Registered != 1u));
 
 	// Launch connection
-	eBG96_SendCommand("AT+COPS?", strlen("+COPS"), vCallback_OnDemand);
+	eBG96_SendCommand("AT+COPS?", l_au8ATRespBuffer);
 
 	// Set APN
-	eBG96_SendCommand("AT+QICSGP=1,1,\"NXT17.NET\",\"\",\"\",1", strlen("AT+QICSGP=1,1,\"NXT17.NET\",\"\",\"\",1"), vCallback_OnDemand);
+	eBG96_SendCommand("AT+QICSGP=1,1,\"NXT17.NET\",\"\",\"\",1", l_au8ATRespBuffer);
 
 	//Active PDP context
-	eBG96_SendCommand("AT+QIACT=1", strlen("AT+QIACT=1"), vCallback_OnDemand);
+	eBG96_SendCommand("AT+QIACT=1", l_au8ATRespBuffer);
 
 	// Check for PDP context activated
 	l_u8WaitRegistrationRetry = 0u;
 	do
 	{
 		++l_u8WaitRegistrationRetry;
-		eBG96_SendCommand("AT+QIACT?", strlen("AT+QIACT?"), vCallback_OnDemand);
+		l_u8ErrorCode = eBG96_SendCommand("AT+QIACT?", l_au8ATRespBuffer);
 
-		if (g_u8ATretVal == AT_RET_OK)
+		if (l_u8ErrorCode == BG96_ERROR_NONE)
 		{
-			l_u8Connected = u8Tools_isStringInBuffer(g_au8ATRespBuffer, "+QIACT: 1");
-			g_u8ATretVal = AT_RET_ERROR;
+			l_u8Connected = u8Tools_isStringInBuffer(l_au8ATRespBuffer, "+QIACT: 1");
 		}
 		itsdk_delayMs(1000);
 	}while((l_u8WaitRegistrationRetry < 100) && (l_u8Connected != AT_RET_OK));
@@ -160,24 +151,6 @@ void vCellular_Connect(void)
 /****************************************************************************************
  * Private functions
  ****************************************************************************************/
-void vCallback_OnDemand(e_AT_RetVal_t p_eResult, uint8_t * p_pu8Buffer, uint8_t p_u8Size)
-{
-	g_u8ATretVal = p_eResult;
-	memset(g_au8ATRespBuffer, 0u, CELL_CMD_RESP_SIZE_MAX);
-   switch(p_eResult)
-   {
-      case AT_RET_OK:
-         //log_info("SEND MSG TO BG96 SUCCESS\n");
-			memcpy(g_au8ATRespBuffer, p_pu8Buffer, p_u8Size);
-         break;
-      case AT_RET_TIMEOUT:
-			log_info("SEND MSG TO BG96 TIMEOUT\n");
-			break;
-      default:
-          log_info("FAIL TO SEND MSG TO BG96\n");
-      break;
-   }
-}
 
 /****************************************************************************************
  * End Of File

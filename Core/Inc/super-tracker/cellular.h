@@ -22,7 +22,6 @@
  * Defines
  ****************************************************************************************/
 #define CELL_PREFIX_CMD_SIZE_MAX 10
-#define CELL_CMD_RESP_SIZE_MAX	255
 
 /****************************************************************************************
  * Type definitions
@@ -45,9 +44,9 @@ typedef enum _CELLULAR_COMMANDS_ {
 /****************************************************************************************
  * Public function declarations
  ****************************************************************************************/
-/**@brief Disconnect from network.
+/**@brief Connect to cellular network.
  * @return Error code
  */
-void vCellular_Disconnect(void);
+void vCellular_Connect(void);
 
 #endif /* INC_SUPER_TRACKER_CELLULAR_H_ */
