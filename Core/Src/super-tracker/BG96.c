@@ -63,8 +63,8 @@ e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t * p_pau8WaitRes
 		{
 			l_eErrCode = BG96_ERROR_SUCCEED;
 			l_u8ATRespSize = strlen(g_au8ATRespBuffer);
-			memset(p_au8Buffer, 0u, BG96_RESP_SIZE_MAX);
-			memcpy(p_au8Buffer, g_au8ATRespBuffer, l_u8ATRespSize);
+			//memset(p_au8Buffer, 0u, BG96_RESP_SIZE_MAX);
+			//memcpy(p_au8Buffer, g_au8ATRespBuffer, l_u8ATRespSize);
 		}
 		else if (g_u8ATretVal == AT_RET_TIMEOUT)
 		{
