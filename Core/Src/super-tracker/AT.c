@@ -26,6 +26,8 @@
 #include <it_sdk/time/timer.h>
 #include <it_sdk/logger/logger.h>
 
+#include "super-tracker/ES_Queue.h"
+
 #include "super-tracker/AT.h"
 
 /****************************************************************************************
@@ -41,12 +43,11 @@
 #define TX_MSG_SIZE        (uint8_t)28u
 #define MAX_SIZE_MSG       (uint8_t)TX_MSG_SIZE + PREFIX_MSG_SIZE
 
-#define AT_RX_BUFFER_SIZE  (uint8_t)64u
+#define AT_RX_BUFFER_SIZE  (uint8_t)255u
 
 /****************************************************************************************
  * Private type declarations
  ****************************************************************************************/
-
 
 /****************************************************************************************
  * Private function declarations
@@ -69,9 +70,34 @@ static fp_vATCallback_t g_fpCallback;
 
 static uint8_t g_u8UartRxChar = '\0';
 
+/* Buffer with data to receive */
+static uint8_t g_au8UartInputQueueBufferData[AT_RX_BUFFER_SIZE];
+
+/* Buffer manager */
+static ES_Queue_Buffer_t g_sUartInputQueueBuffer = {
+   .size = AT_RX_BUFFER_SIZE,
+   .data = g_au8UartInputQueueBufferData
+};
+
+/* Queue manager */
+static ES_Queue_t g_sUartInputQueue =  {
+   .index_write = 0u,
+   .index_read = 0u,
+   .element_counter = 0u,
+   .overlap_counter = 0u,
+   .buffer = &g_sUartInputQueueBuffer
+};
+
 /****************************************************************************************
  * Public functions
  ****************************************************************************************/
+/**@brief Initialize AT module.
+ * @return None
+ */
+void vAT_Init(void)
+{
+	ES_Queue_Init(&g_sUartInputQueue, &g_sUartInputQueueBuffer, 0);
+}
 
 /**@brief Direct send AT command.
  * @param [in]  p_pu8Msg         : AT message to send
@@ -79,7 +105,7 @@ static uint8_t g_u8UartRxChar = '\0';
  * @param [in/out] p_fpCallback  : Callback for response
  * @return None
  */
-void vAT_Send(uint8_t * p_pu8Msg, uint8_t p_u8WaitAsyncResp, fp_vATCallback_t p_fpCallback)
+void vAT_Send(uint8_t * p_pu8Msg, uint8_t * p_pau8WaitResp, uint8_t p_u8WaitAsyncResp, fp_vATCallback_t p_fpCallback)
 {
    uint8_t l_au8Buffer[MAX_SIZE_MSG] = { 0u };
    uint8_t l_u8Size = strlen(p_pu8Msg);
@@ -104,21 +130,12 @@ void vAT_Send(uint8_t * p_pu8Msg, uint8_t p_u8WaitAsyncResp, fp_vATCallback_t p_
 			g_fpCallback = p_fpCallback;
 			g_u8WaitingReplyAT = 1u;
 
-			if (p_u8WaitAsyncResp)
-			{
-				g_u8MultipleReply = 3u;
-			}
-			else
-			{
-				g_u8MultipleReply = 0u;	//TO REFACTOR
-			}
-
 			itsdk_stimer_register(AT_TIMEOUT_MAX,vATTimeOutHandler,0,TIMER_ACCEPT_LOWPOWER);
 
 			//Blocking mode until response or timeout
-			while ((g_u8WaitingReplyAT == 1u) || (g_u8MultipleReply != 0u))
+			while (g_u8WaitingReplyAT == 1u)
 			{
-					vAT_MessageProcess();
+					vAT_MessageProcess(p_pau8WaitResp);
 					wdg_refresh();
 			}
 		}
@@ -134,34 +151,56 @@ void vAT_Send(uint8_t * p_pu8Msg, uint8_t p_u8WaitAsyncResp, fp_vATCallback_t p_
 /**@brief Manage messages.
  * @return None.
  */
-void vAT_MessageProcess(void)
+void vAT_MessageProcess(uint8_t * p_pau8WaitResp)
 {
+	uint8_t l_au8EnqueueBuffer[AT_RX_BUFFER_SIZE] = { 0u };
+	uint16_t l_au8EnqueueSize = 0u;
+	static uint8_t l_u8isPresent = 0u;
+	static uint8_t l_u8isRespPresent = 0u;
+
    itsdk_stimer_run();
 
-   if((g_u8WaitingReplyAT == 1u) || (g_u8MultipleReply != 0u))
+   if(g_u8WaitingReplyAT == 1u)
    {
-      if(g_u8MsgReceived != 0u)
-      {
-         if(g_u8MultipleReply != 0u)
-         {
-            g_u8MultipleReply--;
-            g_u8MsgReceived = 0u;
-         }
-         else
-         {
-            if (u8Tools_isStringInBuffer(g_au8ATBuffer, "OK"))
-            {
-            	itsdk_stimer_stop(vATTimeOutHandler,0);
-            	g_u8WaitingReplyAT = 0u;
-            	g_u8MsgReceived = 0u;
+		if (ES_Queue_Read(&g_sUartInputQueue, l_au8EnqueueBuffer, &l_au8EnqueueSize) == ES_Queue_Succeed)
+		{
+			if (p_pau8WaitResp != NULL)
+			{
+				if (l_u8isRespPresent == 0u)
+				{
+					l_u8isRespPresent = u8Tools_isStringInBuffer(l_au8EnqueueBuffer, p_pau8WaitResp);
+				}
+			}
+			else
+			{
+				l_u8isRespPresent = 1u;
+			}
 
-   				if((*g_fpCallback) != NULL)
-   				{
-   					(*g_fpCallback)(AT_RET_OK, g_au8ATBuffer, g_u8RxIdx);
-   				}
-            }
-         }
-      }
+			l_u8isPresent = u8Tools_isStringInBuffer(l_au8EnqueueBuffer, "OK");
+
+			if ((l_u8isPresent == 1u))
+			{
+				itsdk_stimer_stop(vATTimeOutHandler,0);
+
+				if((*g_fpCallback) != NULL)
+				{
+					if (l_u8isRespPresent == 1u)
+					{
+						(*g_fpCallback)(AT_RET_OK, l_au8EnqueueBuffer, l_au8EnqueueSize);
+					}
+					else
+					{
+						(*g_fpCallback)(AT_RET_ERROR, l_au8EnqueueBuffer, l_au8EnqueueSize);
+					}
+				}
+
+				g_u8WaitingReplyAT = 0u;
+				l_u8isPresent = 0u;
+				l_u8isRespPresent = 0u;
+
+				ES_Queue_ClearAll(&g_sUartInputQueue);
+			}
+		}
       else
       {  /* Still pending transfer (Wait for reply or Timeout */  }
    }
@@ -178,24 +217,29 @@ void vAT_UpdateFrame(const uint8_t p_u8Data)
    log_info("%c", p_u8Data);
 #endif
 
-   if(g_au8ATBuffer[g_u8RxIdx] == g_au8ATEndOfFrame[g_u8EOFIdx])
+   g_u8RxIdx++;
+
+   if(g_au8ATBuffer[g_u8RxIdx-1] == g_au8ATEndOfFrame[g_u8EOFIdx])
 	{
       g_u8EOFIdx++;
+
       if(g_u8EOFIdx >= AT_EOF_SIZE)
       {
-      	if (g_u8RxIdx > 2)
-      	{
-      		g_u8MsgReceived++;
-      	}
+         if (g_u8RxIdx > 2)
+         {
+         	ES_Queue_Write(&g_sUartInputQueue, g_au8ATBuffer, g_u8RxIdx);
+         	g_u8RxIdx = 0u;
+         	memset(g_au8ATBuffer, 0u, AT_RX_BUFFER_SIZE);
+         }
          g_u8EOFIdx = 0u;
       }
    }
 
-   g_u8RxIdx++;
    if(g_u8RxIdx > AT_RX_BUFFER_SIZE)
    {
-      g_u8RxIdx = 0u;
+   	g_u8RxIdx = 0u;
    }
+
 }
 
 /**@brief  Check if there are pending message to transmit.
@@ -246,6 +290,7 @@ static void vATTimeOutHandler(void * p_pvParameters)
    /* We are not waiting reply anymore */
    g_u8WaitingReplyAT = 0u;
    g_u8MultipleReply = 0u;
+   ES_Queue_ClearAll(&g_sUartInputQueue);
 }
 
 /****************************************************************************************

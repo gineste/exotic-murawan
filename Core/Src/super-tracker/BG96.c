@@ -49,7 +49,7 @@ uint8_t g_au8ATRespBuffer[BG96_RESP_SIZE_MAX] = {0};
  * @param[in/out]  p_au8Buffer : Buffer to store the response.
  * @return Error Code.
  */
-e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t p_u8WaitAsyncResp, uint8_t * p_au8Buffer)
+e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t * p_pau8WaitResp, uint8_t p_u8WaitAsyncResp, uint8_t * p_au8Buffer)
 {
    e_BG96_ErrorCode_t l_eErrCode = BG96_ERROR_PARAM;
    uint8_t l_u8ATRespSize = 0u;
@@ -57,11 +57,11 @@ e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t p_u8WaitAsyncRe
    if (p_au8Buffer != NULL
    		&& p_au8Cmd != NULL)
    {
-		vAT_Send(p_au8Cmd, p_u8WaitAsyncResp, (fp_vATCallback_t)vCallback_OnDemand);
+		vAT_Send(p_au8Cmd, p_pau8WaitResp, p_u8WaitAsyncResp, (fp_vATCallback_t)vCallback_OnDemand);
 
 		if (g_u8ATretVal == AT_RET_OK)
 		{
-			l_eErrCode = BG96_ERROR_NONE;
+			l_eErrCode = BG96_ERROR_SUCCEED;
 			l_u8ATRespSize = strlen(g_au8ATRespBuffer);
 			memset(p_au8Buffer, 0u, BG96_RESP_SIZE_MAX);
 			memcpy(p_au8Buffer, g_au8ATRespBuffer, l_u8ATRespSize);
@@ -70,7 +70,7 @@ e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t p_u8WaitAsyncRe
 		{
 			l_eErrCode = BG96_ERROR_TIMEOUT;
 		}
-		else
+		else if (g_u8ATretVal == AT_RET_ERROR)
 		{
 			l_eErrCode = BG96_ERROR_FAILED;
 		}
@@ -92,6 +92,9 @@ void vCallback_OnDemand(e_AT_RetVal_t p_eResult, uint8_t * p_pu8Buffer, uint8_t 
          //log_info("SEND MSG TO BG96 SUCCESS\n");
 			memcpy(g_au8ATRespBuffer, p_pu8Buffer, p_u8Size);
          break;
+      case AT_RET_ERROR:
+			log_info("SEND MSG TO BG96 TIMEOUT\n");
+			break;
       case AT_RET_TIMEOUT:
 			log_info("SEND MSG TO BG96 TIMEOUT\n");
 			break;

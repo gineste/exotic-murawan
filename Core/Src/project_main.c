@@ -65,7 +65,7 @@ extern machine_t murawan_stm;
 void
 task ()
 {
-	statem (&murawan_stm);
+	//statem (&murawan_stm);
 }
 
 /**
@@ -78,6 +78,7 @@ project_setup ()
 
 	/* setup cellular connexion */
 	uint8_t send_data[256] = {0};
+	vAT_Init();
 	vCellular_Connect();
 	vCreateJsonFrame(63.23361814088533, 4.6292071962105235, 4.0, 10, 42.42, send_data);
 	vMQTT_send(send_data);

@@ -4,47 +4,65 @@
  *    ) _)  )  ( (  O )  )(    )(  ( (__   \___ \ )  / \___ \  )(   ) _) / \/ \\___ \     
  *   (____)(_/\_) \__/  (__)  (__)  \___)  (____/(__/  (____/ (__) (____)\_)(_/(____/
  *
- * Copyright (c) 2017 EXOTIC SYSTEMS. All Rights Reserved.
+ * Copyright (c) 2018 EXOTIC SYSTEMS. All Rights Reserved.
  *
  * Licensees are granted free, non-transferable use of the information. NO WARRANTY 
  * of ANY KIND is provided. This heading must NOT be removed from the file.
  *
  */
-#ifndef INC_SUPER_TRACKER_BG96_H_
-#define INC_SUPER_TRACKER_BG96_H_
+#ifndef ES_QUEUE_H
+#define ES_QUEUE_H
 
 /****************************************************************************************
  * Include Files
  ****************************************************************************************/
 #include <stdint.h>
-#include "super-tracker/AT.h"
 
 /****************************************************************************************
  * Defines
  ****************************************************************************************/
-#define BG96_RESP_SIZE_MAX	255
-
+ 
 /****************************************************************************************
  * Type definitions
  ****************************************************************************************/
-typedef enum _BG96_ERR_CODE_{
-	BG96_ERROR_NONE,
-   BG96_ERROR_PARAM,
-	BG96_ERROR_SUCCEED,
-	BG96_ERROR_FAILED,
-	BG96_ERROR_TIMEOUT,
-} e_BG96_ErrorCode_t;
+typedef enum _ES_QUEUE_RETURNCODE_{
+    ES_Queue_Failed          = 0x00,
+    ES_Queue_Succeed         = 0x01,
+    ES_Queue_Overlap         = 0x02,
+    ES_Queue_Cycle           = 0x04,
+} ES_Queue_ReturnCode_t;
 
-typedef fp_vATCallback_t fp_BG96Callback_t;
+typedef void (*ES_Queue_Empty_Function)(void);
+
+typedef struct __ES_QUEUE_SEMAPHORE__ {
+	  ES_Queue_Empty_Function lock;
+	  ES_Queue_Empty_Function unlock;
+} ES_Queue_Semaphore_t;
+
+typedef struct __ES_QUEUE_BUFFER__ {
+	  uint16_t size;
+	  uint8_t * data;
+} ES_Queue_Buffer_t;
+
+typedef struct __ES_QUEUE__ {
+  uint16_t index_write;
+  uint16_t index_read;
+  uint16_t element_counter;
+  uint32_t overlap_counter;
+  ES_Queue_Buffer_t * buffer;
+  ES_Queue_Semaphore_t * semaphore;
+} ES_Queue_t;
 
 /****************************************************************************************
  * Public function declarations
  ****************************************************************************************/
-/**@brief      Send Command to BG96.
- * @param[in]  p_eCmd : Command.
- * @param[in/out]  p_au8Buffer : Buffer to store the response.
- * @return Error Code.
- */
-e_BG96_ErrorCode_t eBG96_SendCommand(uint8_t * p_au8Cmd, uint8_t * p_pau8WaitResp, uint8_t p_u8WaitAsyncResp, uint8_t * p_au8Buffer);
+ES_Queue_ReturnCode_t ES_Queue_Init(ES_Queue_t * queue, ES_Queue_Buffer_t * queue_buffer, ES_Queue_Semaphore_t * semaphore);
+ES_Queue_ReturnCode_t ES_Queue_Read(ES_Queue_t * queue, uint8_t * data, uint16_t * len);
+ES_Queue_ReturnCode_t ES_Queue_Write(ES_Queue_t * queue, uint8_t * data, uint16_t len);
 
-#endif /* INC_SUPER_TRACKER_BG96_H_ */
+uint32_t ES_Queue_GetOverlapCounter(ES_Queue_t * queue);
+uint32_t ES_Queue_GetElementCounter(ES_Queue_t * queue);
+
+ES_Queue_ReturnCode_t ES_Queue_ClearAll(ES_Queue_t * queue);
+
+#endif /* ES_QUEUE_H */

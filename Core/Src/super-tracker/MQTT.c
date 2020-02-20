@@ -45,7 +45,7 @@
  ****************************************************************************************/ 
 e_BG96_ErrorCode_t vMQTT_send(uint8_t * p_au8Payload)
 {
-   uint8_t CTRL_Z[] = { 26 };
+  /* uint8_t CTRL_Z[] = { 26 };
    uint8_t token_buffer[100] = {0};
    uint8_t l_u8Open = 0u;
    uint8_t l_u8Connect = 0u;
@@ -92,7 +92,7 @@ e_BG96_ErrorCode_t vMQTT_send(uint8_t * p_au8Payload)
 		}
 	}
 
-	return l_u8ErrorCode;
+	return l_u8ErrorCode;*/
 }
 
 /****************************************************************************************
