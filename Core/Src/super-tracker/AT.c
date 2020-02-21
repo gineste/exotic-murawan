@@ -118,10 +118,19 @@ void vAT_Send(uint8_t * p_pu8Msg, uint8_t * p_pau8WaitResp, uint8_t p_u8WaitAsyn
 		return;
 	}
 
-
 	memcpy(l_au8Buffer, p_pu8Msg, l_u8Size);
 	// End of frame with one of any kind of whitespace (space,tab,newline,etc.)
-	l_au8Buffer[l_u8Size++] = '\r';       //Increase index for Uart Length
+
+
+	//Special case: the cmd next to +QTMPUB need char 26 instead of \r
+	if (u8Tools_isStringInBuffer(p_pu8Msg, "latitude") == 0u)
+	{
+		l_au8Buffer[l_u8Size++] = '\r';       //Increase index for Uart Length
+	}
+	else
+	{
+		l_au8Buffer[l_u8Size++] = (char) 26;
+	}
 
 	//Generate interrupt when receive a char on uart2
 	/* Clear Cursor and buffer */
@@ -144,6 +153,10 @@ void vAT_Send(uint8_t * p_pu8Msg, uint8_t * p_pau8WaitResp, uint8_t p_u8WaitAsyn
 			vAT_MessageProcess(p_pau8WaitResp, p_u8WaitAsyncResp);
 			wdg_refresh();
 		}
+
+		//Need to clear queue to avoid it to be full
+		//If full it does not read queue anymore.
+		ES_Queue_ClearAll(&g_sUartInputQueue);
 	}
 
 }
@@ -196,6 +209,15 @@ void vAT_MessageProcess(uint8_t * p_pau8WaitResp, uint8_t p_u8WaitAsyncResp)
 			l_u8isPresent = u8Tools_isStringInBuffer(l_au8EnqueueBuffer,  "OK");
 		}
 
+		//Special case: +QTMPUB cmd return only '>'
+		if (p_pau8WaitResp != NULL)
+		{
+			if ((l_u8isRespPresent == 1u) && (u8Tools_isStringInBuffer(p_pau8WaitResp, ">") == 1u))
+			{
+				l_u8isPresent = 1u;
+			}
+		}
+
 		if ((l_u8isPresent == 1u))
 		{
 			if ((p_u8WaitAsyncResp == 0)
@@ -213,8 +235,6 @@ void vAT_MessageProcess(uint8_t * p_pau8WaitResp, uint8_t p_u8WaitAsyncResp)
 				g_u8WaitingReplyAT = 0u;
 				l_u8isPresent = 0u;
 				l_u8isRespPresent = 0u;
-
-				//ES_Queue_ClearAll(&g_sUartInputQueue);
 			}
 		}
 	}
@@ -292,6 +312,15 @@ void vAT_UpdateFrame(const uint8_t p_u8Data)
 #endif
 
 	g_u8RxIdx++;
+
+	//Special case: +QTMPUB cmd return only '>'
+	if (p_u8Data == '>')
+	{
+		ES_Queue_Write(&g_sUartInputQueue, g_au8ATBuffer, g_u8RxIdx);
+		g_u8RxIdx = 0u;
+		memset(g_au8ATBuffer, 0u, AT_RX_BUFFER_SIZE);
+		g_u8EOFIdx = 0u;
+	}
 
 	if(g_au8ATBuffer[g_u8RxIdx-1] == g_au8ATEndOfFrame[g_u8EOFIdx])
 	{

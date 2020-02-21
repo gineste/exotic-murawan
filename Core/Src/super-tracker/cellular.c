@@ -102,6 +102,8 @@ void vCellular_Connect(void)
 
 	eBG96_SendCommand("AT+COPS=2", NULL, 0, l_au8ATRespBuffer);
 
+	itsdk_delayMs(2000);
+
 	// Connect with Orange
 	eBG96_SendCommand("AT+COPS=1,0,\"Orange F\",0", NULL, 0, l_au8ATRespBuffer);
 	// Connect with best operator
@@ -122,6 +124,8 @@ void vCellular_Connect(void)
 
 	// Launch connection
 	eBG96_SendCommand("AT+COPS?", NULL, 0, l_au8ATRespBuffer);
+
+	itsdk_delayMs(2000);
 
 	// Set APN
 	eBG96_SendCommand("AT+QICSGP=1,1,\"NXT17.NET\",\"\",\"\",1", NULL, 0, l_au8ATRespBuffer);

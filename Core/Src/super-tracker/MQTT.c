@@ -58,21 +58,30 @@ e_BG96_ErrorCode_t vMQTT_send(uint8_t * p_au8Payload)
 
 	l_u8ErrorCode = eBG96_SendCommand("AT+QMTOPEN=1,\"34.247.165.143\",1883","+QMTOPEN: 1,0", 1, l_au8ATRespBuffer);
 
+	itsdk_delayMs(2000);
+
 	if (l_u8ErrorCode == BG96_ERROR_SUCCEED)
 	{
 		snprintf(token_buffer, 100, "AT+QMTCONN=1,\"34.247.165.143\",\"%s\"", TOKEN);
 		l_u8ErrorCode = eBG96_SendCommand(token_buffer,"+QMTCONN: 1,0", 1, l_au8ATRespBuffer);
 
+		itsdk_delayMs(2000);
+
 		if (l_u8ErrorCode == BG96_ERROR_SUCCEED)
 		{
 			l_u8ErrorCode = eBG96_SendCommand("AT+QMTPUB=1,0,0,0,\"v1/devices/me/telemetry\"", ">", 1, l_au8ATRespBuffer);
 
+			itsdk_delayMs(2000);
+
 			if(l_u8ErrorCode == BG96_ERROR_SUCCEED)
 			{
-				l_u8ErrorCode = eBG96_SendCommand(p_au8Payload,"+QMTPUB: 1,0,0", 1, l_au8ATRespBuffer);
+				//l_u8ErrorCode = eBG96_SendCommand(p_au8Payload,"+QMTPUB: 1,0,0", 1, l_au8ATRespBuffer);
+				l_u8ErrorCode = eBG96_SendCommand("{\"latitude\": 45.63, \"longitude\": 2.3}","+QMTPUB: 1,0,0", 1, l_au8ATRespBuffer);
+
+				itsdk_delayMs(2000);
 			}
 
-			eBG96_SendCommand("AT+QMTDISC=1", NULL, 1, l_au8ATRespBuffer);
+			eBG96_SendCommand("AT+QMTDISC=1", "+QMTDISC: 0", 1, l_au8ATRespBuffer);
 		}
 	}
 

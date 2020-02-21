@@ -49,13 +49,12 @@ static void vCreateJsonFrame(float latitude, float longitude, float battery, flo
 {
     memset(payload,0,256);
 
-    sprintf(payload,"{\n\t\"latitude\": %f,\n"
-        "\t\"longitude\": %f,\n"
-        "\t\"battery\": %.2f,\n"
-        "\t\"temperature\": %.2f,\n"
-        "\t\"humidity\": %.2f\n"
-        "}\n%c",
-        latitude, longitude, battery, temperature, humidity, (char) 26);
+    sprintf(payload,"{\"latitude\": %f,"
+        "\"longitude\": %f,"
+        "\"battery\": %.2f,"
+        "\"temperature\": %.2f,"
+        "\"humidity\": %.2f}",
+        latitude, longitude, battery, temperature, humidity);
 }
 
 /**
@@ -80,7 +79,7 @@ project_setup ()
 	uint8_t send_data[256] = {0};
 	vAT_Init();
 	vCellular_Connect();
-	vCreateJsonFrame(63.23361814088533, 4.6292071962105235, 4.0, 10, 42.42, send_data);
+	//vCreateJsonFrame(63.23361814088533, 4.6292071962105235, 4.0, 10, 42.42, send_data);
 	vMQTT_send(send_data);
 
 	murawan_state.lastResetCause = itsdk_getResetCause ();
